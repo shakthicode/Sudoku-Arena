@@ -3151,7 +3151,7 @@
         const token = btoa(`${creds.username}:${creds.password}`);
 
         // Verify credentials dynamically by trying to query /api/users
-        fetch('http://localhost:8888/api/users', {
+        fetch(`${API_BASE}/api/users`, {
           headers: { 'Authorization': `Basic ${token}` }
         })
           .then(async (res) => {
@@ -3179,8 +3179,8 @@
         setFetching(true);
         try {
           const [gRes, lRes] = await Promise.all([
-            fetch('http://localhost:8888/api/games', { headers: { 'Authorization': `Basic ${token}` } }),
-            fetch('http://localhost:8888/api/leaderboard'),
+            fetch(`${API_BASE}/api/games`, { headers: { 'Authorization': `Basic ${token}` } }),
+            fetch(`${API_BASE}/api/leaderboard`),
           ]);
           if (gRes.ok) { const d = await gRes.json(); setGames(d.games || {}); }
           if (lRes.ok) { const d = await lRes.json(); setLeaderboard(d.leaderboard || []); }
@@ -3193,7 +3193,7 @@
       function handleRefresh() {
         if (authHeader) {
           setFetching(true);
-          fetch('http://localhost:8888/api/users', {
+          fetch(`${API_BASE}/api/users`, {
             headers: { 'Authorization': `Basic ${authHeader}` }
           })
             .then(async (res) => {

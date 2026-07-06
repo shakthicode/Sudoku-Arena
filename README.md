@@ -1,12 +1,13 @@
 # 🧩 Sudoko-Arena
 
-> A modern, full-stack competitive Sudoku platform — featuring algorithmically generated puzzles, AI-powered Smart Hints, daily challenges, a global leaderboard, achievement unlocks, campaign mode, and a secure bcrypt-authenticated REST API backend. Built as an end-to-end portfolio demonstration.
+> **The most advanced competitive Sudoku platform** — algorithmically generated puzzles, AI-powered Smart Hints, daily global challenges, XP progression, achievements, campaign mode, and a secure REST API backend. Built as a professional end-to-end full-stack portfolio project.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-brightgreen?logo=python)](https://python.org)
 [![React 18](https://img.shields.io/badge/React-18-61dafb?logo=react)](https://react.dev)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v3-38bdf8?logo=tailwindcss)](https://tailwindcss.com)
 [![bcrypt](https://img.shields.io/badge/Auth-bcrypt-orange)](https://pypi.org/project/bcrypt/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 ---
 
@@ -159,12 +160,12 @@ Full REST API documentation: [`docs/api-documentation.md`](docs/api-documentatio
 | `POST` | `/api/auth/register` | None | Create a new user account |
 | `POST` | `/api/auth/login` | None | Authenticate and receive session token |
 | `POST` | `/api/users/update` | Bearer | Update user profile / progression |
-| `GET` | `/api/users/{id}` | Bearer | Fetch user profile |
-| `POST` | `/api/games/save` | Bearer | Save or update a game state |
 | `GET` | `/api/games/{userId}` | Bearer | Retrieve user game history |
+| `POST` | `/api/games/save` | Bearer | Save or update a game state |
 | `GET` | `/api/leaderboard` | None | Fetch global leaderboard |
 | `POST` | `/api/leaderboard/update` | Bearer | Submit new leaderboard score |
-| `GET` | `/api/admin/users` | Basic Auth | List all users (admin) |
+| `GET` | `/api/users` | Basic Auth | List all users (admin) |
+| `GET` | `/api/games` | Basic Auth | List all game records (admin) |
 | `DELETE` | `/api/admin/users/{id}` | Basic Auth | Delete a user (admin) |
 
 ---
@@ -179,7 +180,7 @@ Sudoko-Arena/
 │
 ├── backend/                # Python REST API server + Spring Boot migration guide
 │   ├── server.py           # BaseHTTPRequestHandler-based API (current)
-│   ├── schema.sql          # PostgreSQL production schema (future)
+│   ├── schema.sql          # PostgreSQL production schema (future migration)
 │   └── README.md           # Spring Boot migration guide
 │
 ├── database/               # Local JSON flat-file database (git-ignored)
@@ -192,13 +193,14 @@ Sudoko-Arena/
 │   ├── api-documentation.md # Full REST API endpoint reference
 │   └── database-design.md  # JSON schema + PostgreSQL migration strategy
 │
-├── screenshots/            # Application UI screenshots
+├── screenshots/            # Application UI screenshots for README
 ├── tests/                  # Test directory (future unit/integration tests)
 ├── scripts/                # Utility scripts (future)
 ├── assets/                 # Static assets (future)
 │
 ├── .env                    # Local configuration (git-ignored)
 ├── .env.example            # Configuration template
+├── .gitattributes          # Cross-platform line-ending normalization
 ├── .gitignore              # Excludes database, logs, cache, secrets
 ├── CONTRIBUTING.md         # Contributor onboarding guide
 ├── LICENSE                 # MIT License
@@ -224,9 +226,9 @@ Sudoko-Arena/
 
 ## 🗄️ Database & Migration
 
-Current storage uses lightweight JSON flat files (zero external dependencies). For a production deployment, a complete PostgreSQL schema and Spring Boot migration guide is available:
+Current storage uses lightweight JSON flat files (zero external dependencies). For production deployment, a complete PostgreSQL schema and Spring Boot migration guide is available:
 
-- [`backend/schema.sql`](backend/schema.sql) — Full PostgreSQL DDL with indexes and constraints
+- [`backend/schema.sql`](backend/schema.sql) — Full PostgreSQL DDL with indexes, constraints, and audit triggers
 - [`backend/README.md`](backend/README.md) — Spring Boot + JWT migration walkthrough
 - [`docs/database-design.md`](docs/database-design.md) — Design rationale and data models
 
