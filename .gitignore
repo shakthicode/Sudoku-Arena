@@ -1,0 +1,43 @@
+# Database JSON flat files
+database/users/
+database/games/
+database/leaderboard.json
+*.json.bak
+
+# Secrets & Environment variables
+.env
+!.env.example
+
+# Python Cache & Runtime directories
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Development Tools & Editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Frontend Node packages & distribution builds
+node_modules/
+dist/
+build/
+.eslintcache
+
+# Runtime logs & artifacts
+logs/
+*.log
+*.pid
+server_output.log

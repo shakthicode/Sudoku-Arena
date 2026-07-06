@@ -1,0 +1,3652 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sudoko-Arena – Train Your Brain Every Day</title>
+  <meta name="description"
+    content="Sudoko-Arena is a modern competitive Sudoku platform with AI hints, daily challenges, leaderboards, achievements, and user progression. Play free online Sudoku now." />
+  <meta name="keywords" content="sudoku, online sudoku, sudoku game, daily sudoku, competitive sudoku" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { DEFAULT: '#2563EB', light: '#3B82F6', dark: '#1D4ED8' },
+            secondary: { DEFAULT: '#0EA5E9', light: '#38BDF8' },
+            bg: { DEFAULT: '#0F172A', card: '#1E293B', elevated: '#263348' },
+            success: '#4e22c5ff',
+            error: '#EF4444',
+            warning: '#F59E0B',
+            accent: '#8B5CF6',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif'],
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.5s ease-out',
+            'slide-up': 'slideUp 0.4s ease-out',
+            'slide-in': 'slideIn 0.3s ease-out',
+            'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
+            'float': 'float 3s ease-in-out infinite',
+            'spin-slow': 'spin 8s linear infinite',
+            'bounce-in': 'bounceIn 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97)',
+            'shake': 'shake 0.4s ease-in-out',
+            'count-up': 'countUp 1s ease-out',
+            'winner': 'winner 0.6s ease-out',
+          },
+          keyframes: {
+            fadeIn: { from: { opacity: '0' }, to: { opacity: '1' } },
+            slideUp: { from: { opacity: '0', transform: 'translateY(20px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
+            slideIn: { from: { opacity: '0', transform: 'translateX(-20px)' }, to: { opacity: '1', transform: 'translateX(0)' } },
+            pulseGlow: { '0%,100%': { boxShadow: '0 0 10px rgba(37,99,235,0.3)' }, '50%': { boxShadow: '0 0 30px rgba(37,99,235,0.7)' } },
+            float: { '0%,100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-8px)' } },
+            bounceIn: { '0%': { transform: 'scale(0.3)', opacity: '0' }, '50%': { transform: 'scale(1.05)' }, '70%': { transform: 'scale(0.9)' }, '100%': { transform: 'scale(1)', opacity: '1' } },
+            shake: { '0%,100%': { transform: 'translateX(0)' }, '20%': { transform: 'translateX(-6px)' }, '40%': { transform: 'translateX(6px)' }, '60%': { transform: 'translateX(-4px)' }, '80%': { transform: 'translateX(4px)' } },
+            winner: { '0%': { transform: 'scale(0.5)', opacity: '0' }, '60%': { transform: 'scale(1.2)' }, '100%': { transform: 'scale(1)', opacity: '1' } },
+          },
+          backdropBlur: { xs: '2px' },
+          boxShadow: {
+            'glow-primary': '0 0 20px rgba(37,99,235,0.4)',
+            'glow-success': '0 0 20px rgba(34,197,94,0.4)',
+            'glow-error': '0 0 20px rgba(239,68,68,0.4)',
+            'glass': '0 8px 32px rgba(0,0,0,0.3)',
+          },
+        }
+      }
+    };
+  </script>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #0F172A;
+      color: #E2E8F0;
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      overflow-x: hidden;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #0F172A;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+
+    .glass {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .glass-light {
+      background: rgba(38, 51, 72, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #3B82F6, #0EA5E9, #8B5CF6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .gradient-bg {
+      background: linear-gradient(135deg, #2563EB 0%, #0EA5E9 50%, #8B5CF6 100%);
+    }
+
+    .gradient-border {
+      position: relative;
+    }
+
+    .gradient-border::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      background: linear-gradient(135deg, #2563EB, #8B5CF6);
+      border-radius: inherit;
+      z-index: -1;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2563EB, #1D4ED8);
+      color: white;
+      font-weight: 600;
+      padding: 0.625rem 1.5rem;
+      border-radius: 0.5rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #3B82F6, #2563EB);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: rgba(30, 41, 59, 0.8);
+      color: #94A3B8;
+      font-weight: 500;
+      padding: 0.625rem 1.5rem;
+      border-radius: 0.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(38, 51, 72, 0.9);
+      color: #E2E8F0;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: #64748B;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.875rem;
+    }
+
+    .btn-ghost:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #94A3B8;
+    }
+
+    /* Sudoku Board */
+    .sudoku-grid {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      border: 2px solid rgba(37, 99, 235, 0.6);
+      border-radius: 8px;
+      overflow: hidden;
+      gap: 0;
+    }
+
+    .sudoku-cell {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(0.7rem, 2.2vw, 1.2rem);
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      position: relative;
+      user-select: none;
+      min-width: 0;
+    }
+
+    .sudoku-cell:hover:not(.cell-given) {
+      background: rgba(37, 99, 235, 0.15);
+    }
+
+    .sudoku-cell.cell-given {
+      font-weight: 700;
+      color: #E2E8F0;
+      cursor: default;
+    }
+
+    .sudoku-cell.cell-user {
+      color: #60A5FA;
+    }
+
+    .sudoku-cell.cell-selected {
+      background: rgba(37, 99, 235, 0.35) !important;
+      box-shadow: inset 0 0 0 2px #2563EB;
+    }
+
+    .sudoku-cell.cell-highlighted {
+      background: rgba(37, 99, 235, 0.1);
+    }
+
+    .sudoku-cell.cell-same-number {
+      background: rgba(37, 99, 235, 0.2);
+    }
+
+    .sudoku-cell.cell-error {
+      color: #EF4444 !important;
+      background: rgba(239, 68, 68, 0.15) !important;
+      animation: shake 0.4s ease-in-out;
+    }
+
+    .sudoku-cell.cell-hint {
+      color: #22C55E !important;
+      background: rgba(34, 197, 94, 0.15) !important;
+      animation: winner 0.6s ease-out;
+    }
+
+    .sudoku-cell.cell-notes {
+      font-size: clamp(0.3rem, 0.8vw, 0.5rem);
+      line-height: 1.2;
+      padding: 2px;
+    }
+
+    /* Box borders */
+    .sudoku-cell:nth-child(3n) {
+      border-right: 2px solid rgba(37, 99, 235, 0.4);
+    }
+
+    .sudoku-cell:nth-child(9n) {
+      border-right: none;
+    }
+
+    .sudoku-row-3 .sudoku-cell,
+    .sudoku-row-6 .sudoku-cell {
+      border-bottom: 2px solid rgba(37, 99, 235, 0.4);
+    }
+
+    /* Number pad */
+    .num-pad {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.5rem;
+    }
+
+    .num-btn {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      font-weight: 600;
+      border-radius: 0.5rem;
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      color: #E2E8F0;
+    }
+
+    .num-btn:hover {
+      background: rgba(37, 99, 235, 0.3);
+      border-color: #2563EB;
+      transform: scale(1.05);
+    }
+
+    .num-btn:active {
+      transform: scale(0.95);
+    }
+
+    .num-btn.num-disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* Achievement badge */
+    .achievement-badge {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(37, 99, 235, 0.2));
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      border-radius: 12px;
+      padding: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transition: all 0.2s ease;
+    }
+
+    .achievement-badge:hover {
+      transform: translateY(-2px);
+      border-color: rgba(139, 92, 246, 0.5);
+    }
+
+    .achievement-badge.locked {
+      opacity: 0.4;
+      filter: grayscale(1);
+    }
+
+    /* Stat card */
+    .stat-card {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 12px;
+      padding: 1.25rem;
+      transition: all 0.2s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(37, 99, 235, 0.3);
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .toast {
+      background: rgba(30, 41, 59, 0.9);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0.75rem 1.25rem;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      animation: slideIn 0.3s ease-out;
+      min-width: 250px;
+      max-width: 350px;
+      font-size: 0.875rem;
+    }
+
+    /* Modal overlay */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .modal-card {
+      background: #1E293B;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 480px;
+      animation: bounceIn 0.4s ease-out;
+    }
+
+    /* Leaderboard row */
+    .leaderboard-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+    }
+
+    .leaderboard-row:hover {
+      background: rgba(37, 99, 235, 0.07);
+      border-color: rgba(37, 99, 235, 0.15);
+    }
+
+    .leaderboard-row.my-row {
+      background: rgba(37, 99, 235, 0.12);
+      border-color: rgba(37, 99, 235, 0.3);
+    }
+
+    /* Streak calendar */
+    .streak-day {
+      width: 20px;
+      height: 20px;
+      border-radius: 3px;
+      transition: all 0.2s ease;
+    }
+
+    .streak-day:hover {
+      transform: scale(1.3);
+    }
+
+    /* Progress bar */
+    .progress-bar {
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #2563EB, #0EA5E9);
+      transition: width 0.5s ease;
+    }
+
+    /* Input field */
+    .form-input {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 0.5rem;
+      padding: 0.75rem 1rem;
+      color: #E2E8F0;
+      font-size: 0.875rem;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .form-input:focus {
+      border-color: #2563EB;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .form-input.error {
+      border-color: #EF4444;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+    }
+
+    .form-input::placeholder {
+      color: #475569;
+    }
+
+    /* Tab */
+    .tab-btn {
+      padding: 0.5rem 1.25rem;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, #2563EB, #1D4ED8);
+      color: white;
+      box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3);
+    }
+
+    .tab-btn:not(.active) {
+      background: transparent;
+      color: #64748B;
+    }
+
+    .tab-btn:not(.active):hover {
+      color: #94A3B8;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Difficulty chip */
+    .diff-chip {
+      padding: 0.4rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+
+    .diff-chip:hover {
+      transform: translateY(-1px);
+    }
+
+    /* Animated background particles */
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    /* Notes grid inside cell */
+    .notes-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      width: 100%;
+      height: 100%;
+      gap: 0;
+    }
+
+    .note-num {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(0.25rem, 0.7vw, 0.45rem);
+      color: #94A3B8;
+      line-height: 1;
+    }
+
+    /* Rank badge */
+    .rank-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+
+    /* Admin panel styles */
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    .admin-table th {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      background: rgba(37, 99, 235, 0.15);
+      color: #94A3B8;
+      font-weight: 600;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .admin-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: #CBD5E1;
+      vertical-align: middle;
+    }
+
+    .admin-table tr:hover td {
+      background: rgba(37, 99, 235, 0.05);
+    }
+
+    .admin-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Hero gradient orbs */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+    }
+
+    /* Glassmorphic card hover */
+    .glass-card-hover {
+      transition: all 0.3s ease;
+    }
+
+    .glass-card-hover:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(37, 99, 235, 0.2);
+    }
+
+    /* Footer link style */
+    .footer-link {
+      color: #475569;
+      transition: color 0.2s;
+      font-size: 0.875rem;
+    }
+
+    .footer-link:hover {
+      color: #94A3B8;
+    }
+
+    /* Admin badge */
+    .admin-badge {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.1));
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #FCA5A5;
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Scrollable admin table wrapper */
+    .admin-scroll {
+      overflow-x: auto;
+      border-radius: 0.75rem;
+    }
+
+    .admin-scroll::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    .admin-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .admin-scroll::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 2px;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .sudoku-cell {
+        font-size: 0.8rem;
+      }
+
+      .num-btn {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <!-- React 18 + ReactDOM via CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Babel for JSX in browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback, useRef, useMemo, createContext, useContext } = React;
+
+    // ============================================================
+    // SUDOKU ENGINE
+    // ============================================================
+
+    function generateSolvedBoard() {
+      const board = Array.from({ length: 9 }, () => Array(9).fill(0));
+      solveBoardRecursive(board);
+      return board;
+    }
+
+    function solveBoardRecursive(board) {
+      const empty = findEmpty(board);
+      if (!empty) return true;
+      const [r, c] = empty;
+      const nums = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+      for (const n of nums) {
+        if (isValid(board, r, c, n)) {
+          board[r][c] = n;
+          if (solveBoardRecursive(board)) return true;
+          board[r][c] = 0;
+        }
+      }
+      return false;
+    }
+
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function findEmpty(board) {
+      for (let r = 0; r < 9; r++)
+        for (let c = 0; c < 9; c++)
+          if (board[r][c] === 0) return [r, c];
+      return null;
+    }
+
+    function isValid(board, row, col, num) {
+      // Row
+      if (board[row].includes(num)) return false;
+      // Col
+      for (let r = 0; r < 9; r++) if (board[r][col] === num) return false;
+      // Box
+      const br = Math.floor(row / 3) * 3, bc = Math.floor(col / 3) * 3;
+      for (let r = br; r < br + 3; r++)
+        for (let c = bc; c < bc + 3; c++)
+          if (board[r][c] === num) return false;
+      return true;
+    }
+
+    function countSolutions(board, limit = 2) {
+      let count = 0;
+      function solve(b) {
+        if (count >= limit) return;
+        const empty = findEmpty(b);
+        if (!empty) { count++; return; }
+        const [r, c] = empty;
+        for (let n = 1; n <= 9; n++) {
+          if (isValid(b, r, c, n)) {
+            b[r][c] = n;
+            solve(b);
+            b[r][c] = 0;
+            if (count >= limit) return;
+          }
+        }
+      }
+      const copy = board.map(r => [...r]);
+      solve(copy);
+      return count;
+    }
+
+    const DIFFICULTY_CONFIG = {
+      Easy: { cells: 46, label: 'Easy', color: 'text-green-400', bg: 'bg-green-900/30', border: 'border-green-500/40', xp: 50 },
+      Medium: { cells: 35, label: 'Medium', color: 'text-blue-400', bg: 'bg-blue-900/30', border: 'border-blue-500/40', xp: 100 },
+      Hard: { cells: 26, label: 'Hard', color: 'text-orange-400', bg: 'bg-orange-900/30', border: 'border-orange-500/40', xp: 175 },
+      Expert: { cells: 18, label: 'Expert', color: 'text-red-400', bg: 'bg-red-900/30', border: 'border-red-500/40', xp: 275 },
+      Nightmare: { cells: 12, label: 'Nightmare', color: 'text-purple-400', bg: 'bg-purple-900/30', border: 'border-purple-500/40', xp: 400 },
+    };
+
+    // Campaign: 10 rounds per starting difficulty
+    // Structure: 5 normal → 1 boss (next level) → 3 next-level → 1 final boss (level+2)
+    const CAMPAIGN_CONFIG = {
+      Easy: [
+        { diff: 'Easy', boss: false, label: 'Round 1' },
+        { diff: 'Easy', boss: false, label: 'Round 2' },
+        { diff: 'Easy', boss: false, label: 'Round 3' },
+        { diff: 'Easy', boss: false, label: 'Round 4' },
+        { diff: 'Easy', boss: false, label: 'Round 5' },
+        { diff: 'Medium', boss: true, label: 'Boss Round' },
+        { diff: 'Medium', boss: false, label: 'Round 7' },
+        { diff: 'Medium', boss: false, label: 'Round 8' },
+        { diff: 'Medium', boss: false, label: 'Round 9' },
+        { diff: 'Hard', boss: true, label: 'Final Boss' },
+      ],
+      Medium: [
+        { diff: 'Medium', boss: false, label: 'Round 1' },
+        { diff: 'Medium', boss: false, label: 'Round 2' },
+        { diff: 'Medium', boss: false, label: 'Round 3' },
+        { diff: 'Medium', boss: false, label: 'Round 4' },
+        { diff: 'Medium', boss: false, label: 'Round 5' },
+        { diff: 'Hard', boss: true, label: 'Boss Round' },
+        { diff: 'Hard', boss: false, label: 'Round 7' },
+        { diff: 'Hard', boss: false, label: 'Round 8' },
+        { diff: 'Hard', boss: false, label: 'Round 9' },
+        { diff: 'Expert', boss: true, label: 'Final Boss' },
+      ],
+      Hard: [
+        { diff: 'Hard', boss: false, label: 'Round 1' },
+        { diff: 'Hard', boss: false, label: 'Round 2' },
+        { diff: 'Hard', boss: false, label: 'Round 3' },
+        { diff: 'Hard', boss: false, label: 'Round 4' },
+        { diff: 'Hard', boss: false, label: 'Round 5' },
+        { diff: 'Expert', boss: true, label: 'Boss Round' },
+        { diff: 'Expert', boss: false, label: 'Round 7' },
+        { diff: 'Expert', boss: false, label: 'Round 8' },
+        { diff: 'Expert', boss: false, label: 'Round 9' },
+        { diff: 'Nightmare', boss: true, label: 'Final Boss' },
+      ],
+      Expert: [
+        { diff: 'Expert', boss: false, label: 'Round 1' },
+        { diff: 'Expert', boss: false, label: 'Round 2' },
+        { diff: 'Expert', boss: false, label: 'Round 3' },
+        { diff: 'Expert', boss: false, label: 'Round 4' },
+        { diff: 'Expert', boss: false, label: 'Round 5' },
+        { diff: 'Nightmare', boss: true, label: 'Boss Round' },
+        { diff: 'Nightmare', boss: false, label: 'Round 7' },
+        { diff: 'Nightmare', boss: false, label: 'Round 8' },
+        { diff: 'Nightmare', boss: false, label: 'Round 9' },
+        { diff: 'Nightmare', boss: true, label: 'Final Boss' },
+      ],
+      Nightmare: [
+        { diff: 'Nightmare', boss: false, label: 'Round 1' },
+        { diff: 'Nightmare', boss: false, label: 'Round 2' },
+        { diff: 'Nightmare', boss: false, label: 'Round 3' },
+        { diff: 'Nightmare', boss: false, label: 'Round 4' },
+        { diff: 'Nightmare', boss: false, label: 'Round 5' },
+        { diff: 'Nightmare', boss: true, label: 'Boss Round' },
+        { diff: 'Nightmare', boss: false, label: 'Round 7' },
+        { diff: 'Nightmare', boss: false, label: 'Round 8' },
+        { diff: 'Nightmare', boss: false, label: 'Round 9' },
+        { diff: 'Nightmare', boss: true, label: 'Final Boss' },
+      ],
+    };
+
+    function generatePuzzle(difficulty = 'Medium') {
+      const solved = generateSolvedBoard();
+      const puzzle = solved.map(r => [...r]);
+      const config = DIFFICULTY_CONFIG[difficulty];
+      const toRemove = 81 - config.cells;
+      const positions = shuffle(Array.from({ length: 81 }, (_, i) => [Math.floor(i / 9), i % 9]));
+      let removed = 0;
+      for (const [r, c] of positions) {
+        if (removed >= toRemove) break;
+        const backup = puzzle[r][c];
+        puzzle[r][c] = 0;
+        if (countSolutions(puzzle) !== 1) puzzle[r][c] = backup;
+        else removed++;
+      }
+      return { puzzle, solved };
+    }
+
+    // Generate daily puzzle (seeded by date)
+    function generateDailyPuzzle() {
+      const today = new Date();
+      const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+      // Use seed to create deterministic puzzle (simplified)
+      const rng = mulberry32(seed);
+      return generatePuzzleDeterministic(rng, 'Hard');
+    }
+
+    function mulberry32(seed) {
+      return function () {
+        seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+        let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      };
+    }
+
+    function generatePuzzleDeterministic(rng, difficulty) {
+      const board = Array.from({ length: 9 }, () => Array(9).fill(0));
+      function shuffleDet(arr) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+          const j = Math.floor(rng() * (i + 1));
+          [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+      }
+      function solve(b) {
+        const empty = findEmpty(b);
+        if (!empty) return true;
+        const [r, c] = empty;
+        for (const n of shuffleDet([1, 2, 3, 4, 5, 6, 7, 8, 9])) {
+          if (isValid(b, r, c, n)) {
+            b[r][c] = n;
+            if (solve(b)) return true;
+            b[r][c] = 0;
+          }
+        }
+        return false;
+      }
+      solve(board);
+      const solved = board.map(r => [...r]);
+      const puzzle = board.map(r => [...r]);
+      const config = DIFFICULTY_CONFIG[difficulty];
+      const toRemove = 81 - config.cells;
+      const positions = shuffleDet(Array.from({ length: 81 }, (_, i) => [Math.floor(i / 9), i % 9]));
+      let removed = 0;
+      for (const [r, c] of positions) {
+        if (removed >= toRemove) break;
+        const backup = puzzle[r][c];
+        puzzle[r][c] = 0;
+        if (countSolutions(puzzle) !== 1) puzzle[r][c] = backup;
+        else removed++;
+      }
+      return { puzzle, solved };
+    }
+
+    // Smart hint explanations
+    function getSmartHint(board, solved, row, col) {
+      const num = solved[row][col];
+      const reasons = [];
+      // Check row
+      const rowNums = board[row].filter(v => v !== 0);
+      const missingRow = [1, 2, 3, 4, 5, 6, 7, 8, 9].filter(n => !rowNums.includes(n));
+      if (missingRow.length === 1) {
+        reasons.push(`Row ${row + 1} is missing only one number — it must be ${num}.`);
+      }
+      // Check col
+      const colNums = board.map(r => r[col]).filter(v => v !== 0);
+      const missingCol = [1, 2, 3, 4, 5, 6, 7, 8, 9].filter(n => !colNums.includes(n));
+      if (missingCol.length === 1) {
+        reasons.push(`Column ${col + 1} is missing only one number — it must be ${num}.`);
+      }
+      // Check box
+      const br = Math.floor(row / 3) * 3, bc = Math.floor(col / 3) * 3;
+      const boxNums = [];
+      for (let r = br; r < br + 3; r++) for (let c = bc; c < bc + 3; c++) if (board[r][c] !== 0) boxNums.push(board[r][c]);
+      const missingBox = [1, 2, 3, 4, 5, 6, 7, 8, 9].filter(n => !boxNums.includes(n));
+      if (missingBox.length === 1) {
+        reasons.push(`The 3×3 box containing this cell is missing only one number — it must be ${num}.`);
+      }
+      // Elimination
+      const possible = [1, 2, 3, 4, 5, 6, 7, 8, 9].filter(n => isValid(board, row, col, n));
+      if (possible.length === 1) {
+        reasons.push(`Elimination: all other numbers are already placed in this row, column, or box — only ${num} fits here.`);
+      }
+      // Pointing pair (simplified)
+      if (reasons.length === 0) {
+        reasons.push(`By process of elimination across rows, columns, and boxes, ${num} is the only valid number for this cell.`);
+      }
+      return { num, reason: reasons[0] };
+    }
+
+    // Score formula
+    function calculateScore(difficulty, timeSeconds, hintsUsed, mistakes) {
+      const config = DIFFICULTY_CONFIG[difficulty];
+      const base = config.xp * 10;
+      const diffBonus = config.xp * 5;
+      const timePenalty = Math.floor(timeSeconds / 10) * 5;
+      const hintPenalty = hintsUsed * 50;
+      const mistakePenalty = mistakes * 100;
+      const total = Math.max(0, base + diffBonus - timePenalty - hintPenalty - mistakePenalty);
+      return { total, base, diffBonus, timePenalty, hintPenalty, mistakePenalty };
+    }
+
+    // ============================================================
+    // GLOBAL STATE (simple Context + useState pattern)
+    // ============================================================
+
+    const AppContext = createContext(null);
+
+    function useApp() { return useContext(AppContext); }
+
+    // ============================================================
+    // ACHIEVEMENTS
+    // ============================================================
+
+    const ACHIEVEMENTS = [
+      { id: 'first_victory', icon: '🏆', name: 'First Victory', desc: 'Win your first game', rarity: 'common' },
+      { id: 'speed_runner', icon: '⚡', name: 'Speed Runner', desc: 'Finish a game in under 5 minutes', rarity: 'uncommon' },
+      { id: 'perfectionist', icon: '💎', name: 'Perfectionist', desc: 'Complete a game with no mistakes', rarity: 'rare' },
+      { id: 'genius', icon: '🧠', name: 'Genius', desc: 'Complete Expert difficulty', rarity: 'rare' },
+      { id: 'nightmare_slayer', icon: '👹', name: 'Nightmare Slayer', desc: 'Complete Nightmare difficulty', rarity: 'legendary' },
+      { id: 'consistent', icon: '🔥', name: 'Consistent Player', desc: 'Maintain a 7-day streak', rarity: 'uncommon' },
+      { id: 'hint_free', icon: '🎯', name: 'Purist', desc: 'Complete a game without hints', rarity: 'uncommon' },
+      { id: 'century', icon: '💯', name: 'Century', desc: 'Play 100 games', rarity: 'rare' },
+      { id: 'daily_warrior', icon: '📅', name: 'Daily Warrior', desc: 'Complete 30 daily challenges', rarity: 'rare' },
+      { id: 'fast_5', icon: '🌩', name: 'Lightning', desc: 'Complete 5 games in one day', rarity: 'uncommon' },
+      { id: 'no_undo', icon: '🪨', name: 'Iron Mind', desc: 'Win without using undo', rarity: 'uncommon' },
+      { id: 'comeback', icon: '💪', name: 'Comeback Kid', desc: 'Win after making 2 mistakes', rarity: 'common' },
+      { id: 'early_bird', icon: '🌅', name: 'Early Bird', desc: 'Play before 8 AM', rarity: 'common' },
+      { id: 'night_owl', icon: '🦉', name: 'Night Owl', desc: 'Play after midnight', rarity: 'common' },
+      { id: 'weekender', icon: '🎉', name: 'Weekend Warrior', desc: 'Play on the weekend', rarity: 'common' },
+    ];
+
+    const RARITY_STYLES = {
+      common: { text: 'text-slate-300', bg: 'bg-slate-700/40', border: 'border-slate-600/40' },
+      uncommon: { text: 'text-blue-300', bg: 'bg-blue-900/30', border: 'border-blue-500/40' },
+      rare: { text: 'text-purple-300', bg: 'bg-purple-900/30', border: 'border-purple-500/40' },
+      legendary: { text: 'text-yellow-300', bg: 'bg-yellow-900/30', border: 'border-yellow-500/40' },
+    };
+
+    // ============================================================
+    // LOCAL STORAGE HELPERS
+    // ============================================================
+
+    const LS = {
+      get: (key, fallback = null) => {
+        try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; }
+      },
+      set: (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)); } catch { } },
+    };
+
+    // ── Server API helpers (saves to data/users.json, data/games.json) ────────────
+    const API_BASE = window.location.origin;
+
+    async function apiSaveUser(user) {
+      if (!user || !user.id) return;
+      const token = user.token || (loadUser()?.token);
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      try {
+        await fetch(`${API_BASE}/api/users/update`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(user),
+        });
+      } catch (e) { /* server might not be running – silent fail */ }
+    }
+
+    async function apiRegisterUser(user, password) {
+      try {
+        const res = await fetch(`${API_BASE}/api/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...user, password }),
+        });
+        return res.ok;
+      } catch { return false; }
+    }
+
+    async function apiLoginUser(email, password) {
+      try {
+        const res = await fetch(`${API_BASE}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        if (res.ok) { const d = await res.json(); return d.user || null; }
+        return null;
+      } catch { return null; }
+    }
+
+    async function apiSaveGameResult(userId, gameData) {
+      if (!userId) return;
+      const token = loadUser()?.token;
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      try {
+        await fetch(`${API_BASE}/api/games/save`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ userId, ...gameData }),
+        });
+      } catch { /* silent fail */ }
+    }
+
+    async function apiUpdateLeaderboard(entry) {
+      const token = loadUser()?.token;
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      try {
+        await fetch(`${API_BASE}/api/leaderboard/update`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(entry),
+        });
+      } catch { /* silent fail */ }
+    }
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    function loadUser() {
+      return LS.get('sv_user', null);
+    }
+    function saveUser(user) {
+      LS.set('sv_user', user);
+      // Also persist to server JSON file (fire-and-forget)
+      if (user) apiSaveUser(user);
+    }
+    function loadGameState() {
+      return LS.get('sv_game', null);
+    }
+    function saveGameState(state) {
+      LS.set('sv_game', state);
+    }
+    function loadLeaderboard() {
+      const lb = LS.get('sv_leaderboard', null);
+      if (lb) return lb;
+      // Seed with demo data
+      const demo = [
+        { id: 1, username: 'NeuralNinja', avatar: '🤖', score: 48200, games: 342, rank: 1 },
+        { id: 2, username: 'PuzzleMaestro', avatar: '🎭', score: 45100, games: 289, rank: 2 },
+        { id: 3, username: 'GridGuru', avatar: '🧩', score: 42800, games: 315, rank: 3 },
+        { id: 4, username: 'ByteWizard', avatar: '🪄', score: 39500, games: 201, rank: 4 },
+        { id: 5, username: 'QuantumSolver', avatar: '⚛️', score: 36200, games: 178, rank: 5 },
+        { id: 6, username: 'LogicLord', avatar: '👑', score: 33800, games: 256, rank: 6 },
+        { id: 7, username: 'SudokuSage', avatar: '🔮', score: 31100, games: 193, rank: 7 },
+        { id: 8, username: 'CipherKing', avatar: '🔑', score: 28400, games: 147, rank: 8 },
+        { id: 9, username: 'MatrixMind', avatar: '🌀', score: 25600, games: 132, rank: 9 },
+        { id: 10, username: 'AlgoAce', avatar: '🃏', score: 22900, games: 118, rank: 10 },
+      ];
+      LS.set('sv_leaderboard', demo);
+      return demo;
+    }
+
+    // ============================================================
+    // TOAST COMPONENT
+    // ============================================================
+
+    function Toast({ toasts, removeToast }) {
+      const typeStyles = {
+        success: 'bg-green-900/90 border border-green-500/50 text-green-100',
+        error: 'bg-red-900/90 border border-red-500/50 text-red-100',
+        info: 'bg-blue-900/90 border border-blue-500/50 text-blue-100',
+        warning: 'bg-yellow-900/90 border border-yellow-500/50 text-yellow-100',
+        achievement: 'bg-purple-900/90 border border-purple-500/50 text-purple-100',
+      };
+      const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️', achievement: '🏆' };
+      return (
+        <div className="toast-container">
+          {toasts.map(t => (
+            <div key={t.id} className={`toast backdrop-blur-sm shadow-xl ${typeStyles[t.type] || typeStyles.info}`}
+              style={{ animation: 'slideIn 0.3s ease-out' }}>
+              <span className="text-lg">{icons[t.type] || icons.info}</span>
+              <span className="flex-1 text-sm font-medium">{t.message}</span>
+              <button onClick={() => removeToast(t.id)} className="opacity-60 hover:opacity-100 text-lg leading-none">×</button>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // ============================================================
+    // NAVBAR
+    // ============================================================
+
+    function Navbar({ page, setPage, user, onLogout }) {
+      const [mobileOpen, setMobileOpen] = useState(false);
+      const navLinks = user
+        ? [
+          { label: 'Dashboard', page: 'dashboard', icon: '🏠' },
+          { label: 'Play', page: 'difficulty', icon: '🎮' },
+          { label: 'Daily', page: 'daily', icon: '📅' },
+          { label: 'Rankings', page: 'leaderboard', icon: '🏆' },
+        ]
+        : [];
+
+      return (
+        <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5" style={{ backdropFilter: 'blur(20px)' }}>
+          <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+            {/* Logo */}
+            <button onClick={() => setPage(user ? 'dashboard' : 'landing')}
+              className="flex items-center gap-2 font-display font-bold text-xl group">
+              <div className="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center text-sm font-bold shadow-lg group-hover:scale-105 transition-transform">S</div>
+              <span className="gradient-text">Sudoko-Arena</span>
+            </button>
+
+            {/* Desktop nav */}
+            <div className="hidden md:flex items-center gap-1">
+              {navLinks.map(l => (
+                <button key={l.page} onClick={() => setPage(l.page)}
+                  className={`tab-btn flex items-center gap-1.5 ${page === l.page ? 'active' : ''}`}>
+                  <span className="text-base">{l.icon}</span>{l.label}
+                </button>
+              ))}
+            </div>
+
+            {/* User section */}
+            <div className="flex items-center gap-3">
+              {user ? (
+                <>
+                  <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg glass-light">
+                    <span className="text-lg">{user.avatar}</span>
+                    <div>
+                      <p className="text-xs font-semibold text-slate-200 leading-none">{user.username}</p>
+                      <p className="text-xs text-primary leading-none mt-0.5">Lv.{user.level}</p>
+                    </div>
+                  </div>
+                  <button onClick={onLogout} className="btn-ghost text-xs">Logout</button>
+                </>
+              ) : (
+                <div className="flex gap-2">
+                  <button onClick={() => setPage('login')} className="btn-ghost text-sm">Login</button>
+                  <button onClick={() => setPage('register')} className="btn-primary text-sm py-2 px-4">Sign Up</button>
+                </div>
+              )}
+              {/* Mobile hamburger */}
+              {user && (
+                <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden btn-ghost p-2">
+                  {mobileOpen ? '✕' : '☰'}
+                </button>
+              )}
+            </div>
+          </div>
+          {/* Mobile menu */}
+          {mobileOpen && user && (
+            <div className="md:hidden glass border-t border-white/5 px-4 py-3 flex flex-col gap-1">
+              {navLinks.map(l => (
+                <button key={l.page} onClick={() => { setPage(l.page); setMobileOpen(false); }}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${page === l.page ? 'bg-primary/20 text-primary' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}`}>
+                  {l.icon} {l.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </nav>
+      );
+    }
+
+    // ============================================================
+    // LANDING PAGE
+    // ============================================================
+
+    function LandingPage({ setPage, addToast }) {
+      const [count, setCount] = useState({ players: 0, games: 0, solved: 0 });
+      const features = [
+        { icon: '🧩', title: 'Smart Puzzles', desc: 'Algorithmically generated unique puzzles across 5 difficulty levels with guaranteed single solutions.' },
+        { icon: '🤖', title: 'AI-Powered Hints', desc: 'Context-aware hints explain the logic behind every move — learn while you play.' },
+        { icon: '📅', title: 'Daily Challenges', desc: 'A new global puzzle every day. Compete with players worldwide and claim the top spot.' },
+        { icon: '🏆', title: 'Leaderboards', desc: 'Global, weekly, and monthly rankings. Climb the ladder and earn exclusive titles.' },
+        { icon: '🔥', title: 'Streak System', desc: 'Build daily habits with streak tracking and earn rewards for consistent play.' },
+        { icon: '🎖️', title: 'Achievements', desc: '15 unique achievements to unlock, from Speed Runner to the legendary Nightmare Slayer.' },
+      ];
+      const testimonials = [
+        { user: 'NeuralNinja', avatar: '🤖', text: 'Sudoko-Arena completely changed how I think about logic puzzles. The AI hints are incredible!', stars: 5 },
+        { user: 'PuzzleMaestro', avatar: '🎭', text: 'Best Sudoku platform on the internet. The competitive leaderboards keep me coming back every day.', stars: 5 },
+        { user: 'GridGuru', avatar: '🧩', text: 'Finally, a Sudoku game that feels premium. The design is beautiful and the gameplay is flawless.', stars: 5 },
+      ];
+
+      useEffect(() => {
+        const targets = { players: 12480, games: 584200, solved: 98.4 };
+        let frame = 0;
+        const total = 60;
+        const timer = setInterval(() => {
+          frame++;
+          const p = frame / total;
+          setCount({
+            players: Math.floor(targets.players * Math.min(p, 1)),
+            games: Math.floor(targets.games * Math.min(p, 1)),
+            solved: Math.min(targets.solved * p, targets.solved).toFixed(1),
+          });
+          if (frame >= total) clearInterval(timer);
+        }, 30);
+        return () => clearInterval(timer);
+      }, []);
+
+      return (
+        <div className="min-h-screen">
+          {/* Hero */}
+          <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
+            {/* Animated background */}
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
+              <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-secondary/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+              {/* Grid pattern */}
+              <div className="absolute inset-0 opacity-5"
+                style={{ backgroundImage: 'linear-gradient(rgba(37,99,235,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(37,99,235,0.5) 1px, transparent 1px)', backgroundSize: '50px 50px' }} />
+            </div>
+
+            <div className="relative max-w-5xl mx-auto px-4 text-center" style={{ animation: 'slideUp 0.8s ease-out' }}>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 text-sm font-medium text-blue-300 border border-blue-500/20">
+                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                New: Daily challenges & AI-powered hints are live!
+              </div>
+
+              <h1 className="text-5xl sm:text-7xl font-display font-black leading-tight mb-6">
+                <span className="text-white">Train Your </span>
+                <span className="gradient-text">Brain</span>
+                <br />
+                <span className="text-white">Every Day</span>
+              </h1>
+
+              <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+                The most advanced competitive Sudoku platform. AI-powered hints, daily challenges,
+                global leaderboards, and a progression system that keeps you hooked.
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+                <button onClick={() => setPage('register')}
+                  className="btn-primary text-lg py-4 px-10 rounded-xl shadow-glow-primary flex items-center gap-2">
+                  🚀 Play Free Now
+                </button>
+                <button onClick={() => setPage('daily')}
+                  className="btn-secondary text-lg py-4 px-8 rounded-xl flex items-center gap-2">
+                  📅 Today's Challenge
+                </button>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto">
+                {[
+                  { label: 'Active Players', val: count.players.toLocaleString() },
+                  { label: 'Games Played', val: count.games.toLocaleString() },
+                  { label: '% Puzzle Solved', val: count.solved + '%' },
+                ].map(s => (
+                  <div key={s.label} className="glass rounded-xl p-4">
+                    <p className="text-2xl font-bold gradient-text font-display">{s.val}</p>
+                    <p className="text-xs text-slate-500 mt-1">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Demo Board */}
+          <section className="py-20 px-4">
+            <div className="max-w-5xl mx-auto flex flex-col lg:flex-row items-center gap-16">
+              <div className="flex-1" style={{ animation: 'slideIn 0.8s ease-out' }}>
+                <h2 className="text-4xl font-display font-bold text-white mb-4">
+                  Premium Sudoku<br /><span className="gradient-text">Experience</span>
+                </h2>
+                <p className="text-slate-400 text-lg leading-relaxed mb-6">
+                  A beautifully crafted board with smooth animations, intelligent conflict highlighting,
+                  and real-time feedback — everything a serious puzzle player demands.
+                </p>
+                <ul className="space-y-3">
+                  {['Notes mode for candidates', 'Undo & redo history', 'Auto-save every move', 'Keyboard navigation', 'Mobile-optimized layout'].map(f => (
+                    <li key={f} className="flex items-center gap-3 text-slate-300">
+                      <span className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold">✓</span>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <button onClick={() => setPage('register')} className="btn-primary mt-8 py-3 px-8">
+                  Start Playing →
+                </button>
+              </div>
+              <div className="flex-1 flex justify-center">
+                <MiniDemoBoard />
+              </div>
+            </div>
+          </section>
+
+          {/* Features */}
+          <section className="py-20 px-4 relative">
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/5 rounded-full blur-3xl" />
+            </div>
+            <div className="relative max-w-6xl mx-auto">
+              <div className="text-center mb-16">
+                <h2 className="text-4xl font-display font-bold text-white mb-4">Everything You Need to<br /><span className="gradient-text">Master Sudoku</span></h2>
+                <p className="text-slate-400 text-lg max-w-xl mx-auto">Built for both casual players and competitive champions.</p>
+              </div>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {features.map((f, i) => (
+                  <div key={f.title} className="glass rounded-2xl p-6 hover:border-primary/30 transition-all hover:-translate-y-1"
+                    style={{ animation: `slideUp 0.5s ease-out ${i * 0.1}s both` }}>
+                    <div className="text-4xl mb-4">{f.icon}</div>
+                    <h3 className="font-display font-semibold text-white text-lg mb-2">{f.title}</h3>
+                    <p className="text-slate-400 text-sm leading-relaxed">{f.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Testimonials */}
+          <section className="py-20 px-4">
+            <div className="max-w-5xl mx-auto">
+              <h2 className="text-4xl font-display font-bold text-white text-center mb-12">Loved by Puzzle <span className="gradient-text">Enthusiasts</span></h2>
+              <div className="grid sm:grid-cols-3 gap-6">
+                {testimonials.map(t => (
+                  <div key={t.user} className="glass rounded-2xl p-6">
+                    <div className="flex gap-1 mb-4">{Array.from({ length: t.stars }).map((_, i) => <span key={i} className="text-yellow-400">★</span>)}</div>
+                    <p className="text-slate-300 text-sm leading-relaxed mb-4">"{t.text}"</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">{t.avatar}</span>
+                      <span className="font-semibold text-sm text-white">{t.user}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* CTA */}
+          <section className="py-24 px-4">
+            <div className="max-w-2xl mx-auto text-center glass rounded-3xl p-12 border border-primary/20 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10" />
+              <div className="relative">
+                <div className="text-6xl mb-6">🧩</div>
+                <h2 className="text-4xl font-display font-bold text-white mb-4">Ready to Compete?</h2>
+                <p className="text-slate-400 mb-8">Join thousands of players solving puzzles, climbing rankings, and earning achievements daily.</p>
+                <button onClick={() => setPage('register')}
+                  className="btn-primary text-xl py-4 px-12 rounded-xl shadow-glow-primary">
+                  Create Free Account
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* Footer */}
+          <footer className="relative border-t border-white/5 pt-12 pb-6 px-4 overflow-hidden">
+            {/* Ambient glow blobs */}
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute bottom-0 left-1/4 w-64 h-32 bg-primary/5 rounded-full blur-3xl" />
+              <div className="absolute bottom-0 right-1/4 w-48 h-24 bg-accent/5 rounded-full blur-3xl" />
+            </div>
+
+            <div className="relative w-full px-6 sm:px-12 md:px-16 lg:px-24">
+
+              {/* ── TOP SECTION: three balanced columns ── */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 pb-10">
+
+                {/* Column 1 — Brand */}
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-2 font-display font-bold">
+                    <div className="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center text-sm font-bold shadow-glow-primary flex-shrink-0">S</div>
+                    <span className="gradient-text text-lg">Sudoko-Arena</span>
+                  </div>
+                  {/* Slightly wider to allow natural two-line wrap */}
+                  <p className="text-slate-500 text-xs leading-relaxed max-w-xs">
+                    The most advanced competitive Sudoku platform.<br />Train your brain every day.
+                  </p>
+                </div>
+
+                {/* Column 2 — Platform links (centered on desktop) */}
+                <div className="flex flex-col items-start sm:items-center gap-0">
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Platform</p>
+                  <button onClick={() => setPage('daily')}
+                    className="footer-link hover:text-slate-200 transition-colors w-full sm:text-center py-1">
+                    Daily Challenge
+                  </button>
+                  <button onClick={() => setPage('leaderboard')}
+                    className="footer-link hover:text-slate-200 transition-colors w-full sm:text-center py-1">
+                    Leaderboard
+                  </button>
+                  <button onClick={() => setPage('admin')}
+                    className="footer-link hover:text-slate-200 transition-colors py-1 flex items-center gap-1.5 sm:justify-center w-full">
+                    <span>🔐</span> Admin Portal
+                  </button>
+                </div>
+
+                {/* Column 3 — Creator profile (right-aligned on desktop) */}
+                <div className="flex flex-col items-start sm:items-end gap-1">
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Created By</p>
+                  {/* Clickable name → LinkedIn */}
+                  <a href="https://linkedin.com/in/anuvarshan06" target="_blank" rel="noopener noreferrer"
+                    className="font-display font-bold text-base gradient-text leading-snug hover:opacity-80 transition-opacity cursor-pointer">
+                    Anuvarshan M.
+                  </a>
+                  <p className="text-slate-500 text-xs">Aspiring Java Developer</p>
+                </div>
+
+              </div>
+
+              {/* ── BOTTOM BAR: copyright | credit | social ── */}
+              <div className="border-t border-white/5 pt-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+
+                {/* Left — Copyright */}
+                <p className="text-slate-600 text-xs order-3 sm:order-1">© 2026 Sudoko-Arena. All rights reserved.</p>
+
+                {/* Center — Professional credit line */}
+                <p className="text-slate-500 text-xs flex items-center gap-1.5 order-1 sm:order-2">
+                  Designed &amp; Developed by
+                  <span className="text-slate-300 font-semibold">Anuvarshan M.</span>
+                  <span className="text-red-400 animate-pulse">❤️</span>
+                </p>
+
+                {/* Right — Social icons: larger (w-9 h-9) with smooth lift hover */}
+                <div className="flex items-center gap-3 order-2 sm:order-3">
+
+                  {/* GitHub → shakthicode */}
+                  <a href="https://github.com/shakthicode" target="_blank" rel="noopener noreferrer"
+                    title="GitHub"
+                    style={{ transition: 'all 0.3s ease' }}
+                    className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 hover:border-white/20 hover:-translate-y-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.483 0-.237-.009-.868-.014-1.703-2.782.604-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.031 1.531 1.031.892 1.529 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z" />
+                    </svg>
+                  </a>
+
+                  {/* LinkedIn → anuvarshan06 */}
+                  <a href="https://linkedin.com/in/anuvarshan06" target="_blank" rel="noopener noreferrer"
+                    title="LinkedIn"
+                    style={{ transition: 'all 0.3s ease' }}
+                    className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 hover:border-blue-500/30 hover:-translate-y-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                    </svg>
+                  </a>
+
+                  {/* Portfolio (globe icon) -> Show toast message */}
+                  <button onClick={(e) => {
+                    e.preventDefault();
+                    if (typeof addToast === 'function') {
+                      addToast("We will be working on it! 🌐", "info");
+                    }
+                  }}
+                    title="Portfolio"
+                    style={{ transition: 'all 0.3s ease' }}
+                    className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-purple-400 hover:bg-purple-500/10 hover:border-purple-500/30 hover:-translate-y-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" />
+                      <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
+                    </svg>
+                  </button>
+
+                </div>
+
+              </div>
+            </div>
+          </footer>
+        </div>
+      );
+    }
+
+    // Mini demo board for landing page
+    function MiniDemoBoard() {
+      const puzzle = [
+        [5, 3, 0, 0, 7, 0, 0, 0, 0],
+        [6, 0, 0, 1, 9, 5, 0, 0, 0],
+        [0, 9, 8, 0, 0, 0, 0, 6, 0],
+        [8, 0, 0, 0, 6, 0, 0, 0, 3],
+        [4, 0, 0, 8, 0, 3, 0, 0, 1],
+        [7, 0, 0, 0, 2, 0, 0, 0, 6],
+        [0, 6, 0, 0, 0, 0, 2, 8, 0],
+        [0, 0, 0, 4, 1, 9, 0, 0, 5],
+        [0, 0, 0, 0, 8, 0, 0, 7, 9],
+      ];
+      const [selected, setSelected] = useState([0, 2]);
+      const highlights = [[0, 5], [1, 1], [1, 2], [1, 6], [1, 7], [1, 8], [4, 1], [4, 2], [4, 4], [4, 6], [4, 7]];
+      return (
+        <div className="w-full max-w-xs animate-float">
+          <div className="glass rounded-2xl p-4 shadow-glass border border-white/10 hover:border-primary/20 transition-colors">
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-xs font-semibold text-blue-400 uppercase tracking-wider">Medium · 04:23</span>
+              <span className="text-xs text-slate-500">Mistakes: 0/3</span>
+            </div>
+            <div className="sudoku-grid bg-bg-card" style={{ fontSize: '0.75rem' }}>
+              {puzzle.map((row, r) =>
+                row.map((val, c) => {
+                  const isSel = selected[0] === r && selected[1] === c;
+                  const isHighlight = highlights.some(([hr, hc]) => hr === r && hc === c);
+                  const boxR = Math.floor(r / 3), boxC = Math.floor(c / 3);
+                  const isGiven = val !== 0 && !(r === 0 && c === 2);
+                  return (
+                    <div key={`${r}-${c}`}
+                      onClick={() => setSelected([r, c])}
+                      className={`sudoku-cell
+                    ${isSel ? 'cell-selected animate-pulse' : ''}
+                    ${!isSel && isHighlight ? 'cell-highlighted' : ''}
+                    ${isGiven ? 'cell-given' : ''}
+                    ${!isGiven && val !== 0 ? 'cell-user' : ''}
+                    ${(boxR + boxC) % 2 === 0 ? 'bg-bg-card' : 'bg-bg-elevated/30'}
+                  `}
+                      style={{ minHeight: '2.3rem' }}>
+                      {val !== 0 ? val : (r === 0 && c === 2 ? <span className="text-blue-400 font-bold">4</span> : '')}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+            <div className="grid grid-cols-9 gap-1 mt-3">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => (
+                <button key={n} onClick={() => { if (selected[0] === 0 && selected[1] === 2 && n === 4) { /* Allow inputting correct number */ } }}
+                  className="aspect-square w-full rounded-md text-xs font-semibold bg-bg-elevated border border-white/10 text-slate-300 hover:bg-primary/30 transition-all flex items-center justify-center">
+                  {n}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ============================================================
+    // LOGIN PAGE
+    // ============================================================
+
+    function LoginPage({ setPage, onLogin, addToast }) {
+      const [form, setForm] = useState({ email: '', password: '' });
+      const [errors, setErrors] = useState({});
+      const [loading, setLoading] = useState(false);
+      const [suggestions, setSuggestions] = useState([]);
+      const [showSuggestions, setShowSuggestions] = useState(false);
+      const wrapperRef = useRef(null);
+
+      useEffect(() => {
+        if (!form.email) {
+          setSuggestions([]);
+          return;
+        }
+        const stored = LS.get('sv_accounts', {});
+        const emails = Object.values(stored).map(a => a.email);
+        const filtered = emails.filter(email =>
+          email.toLowerCase().includes(form.email.toLowerCase()) &&
+          email.toLowerCase() !== form.email.toLowerCase()
+        );
+        setSuggestions(filtered);
+      }, [form.email]);
+
+      useEffect(() => {
+        function handleClickOutside(event) {
+          if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+            setShowSuggestions(false);
+          }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+          document.removeEventListener("mousedown", handleClickOutside);
+        };
+      }, []);
+
+      function validate() {
+        const e = {};
+        if (!form.email) e.email = 'Email is required';
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Invalid email address';
+        if (!form.password) e.password = 'Password is required';
+        return e;
+      }
+
+      function handleSubmit(e) {
+        e.preventDefault();
+        const errs = validate();
+        if (Object.keys(errs).length) { setErrors(errs); return; }
+        setLoading(true);
+        // Try server first, fall back to localStorage
+        apiLoginUser(form.email, form.password).then(serverUser => {
+          if (serverUser) {
+            // Sync server user into localStorage accounts
+            const stored = LS.get('sv_accounts', {});
+            stored[serverUser.id] = { ...serverUser, password: form.password };
+            LS.set('sv_accounts', stored);
+            onLogin(serverUser);
+            addToast(`Welcome back, ${serverUser.username}! 👋`, 'success');
+            setLoading(false);
+            return;
+          }
+          // Fallback: localStorage check
+          const stored = LS.get('sv_accounts', {});
+          const account = Object.values(stored).find(a => a.email === form.email);
+          if (!account) {
+            setErrors({ email: 'No account found with this email' });
+            setLoading(false);
+            return;
+          }
+          if (account.password !== form.password) {
+            setErrors({ password: 'Incorrect password' });
+            setLoading(false);
+            return;
+          }
+          onLogin(account);
+          addToast(`Welcome back, ${account.username}! 👋`, 'success');
+          setLoading(false);
+        });
+      }
+
+      return (
+        <div className="min-h-screen flex items-center justify-center pt-16 px-4">
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/15 rounded-full blur-3xl" />
+            <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-accent/15 rounded-full blur-3xl" />
+          </div>
+          <div className="relative w-full max-w-md" style={{ animation: 'bounceIn 0.5s ease-out' }}>
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 rounded-2xl gradient-bg flex items-center justify-center text-2xl font-bold mx-auto mb-4 shadow-glow-primary">S</div>
+              <h1 className="text-3xl font-display font-bold text-white">Welcome Back</h1>
+              <p className="text-slate-400 mt-2">Sign in to continue your streak</p>
+            </div>
+            <div className="glass rounded-2xl p-8 shadow-glass">
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="relative" ref={wrapperRef}>
+                  <label className="block text-sm font-medium text-slate-300 mb-1.5">Email Address</label>
+                  <input id="login-email" type="email" placeholder="you@example.com"
+                    value={form.email} onChange={e => { setForm({ ...form, email: e.target.value }); setErrors({ ...errors, email: '' }); setShowSuggestions(true); }}
+                    onFocus={() => setShowSuggestions(true)}
+                    className={`form-input ${errors.email ? 'error' : ''}`} />
+                  {showSuggestions && suggestions.length > 0 && (
+                    <div className="absolute left-0 right-0 mt-1 bg-slate-800 border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50 max-h-48 overflow-y-auto">
+                      {suggestions.map(email => (
+                        <button
+                          key={email}
+                          type="button"
+                          onClick={() => {
+                            setForm({ ...form, email });
+                            setShowSuggestions(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-primary/20 hover:text-white transition-colors"
+                        >
+                          📧 {email}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {errors.email && <p className="text-error text-xs mt-1.5 flex items-center gap-1"><span>⚠</span>{errors.email}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1.5">Password</label>
+                  <input id="login-password" type="password" placeholder="••••••••"
+                    value={form.password} onChange={e => { setForm({ ...form, password: e.target.value }); setErrors({ ...errors, password: '' }); }}
+                    className={`form-input ${errors.password ? 'error' : ''}`} />
+                  {errors.password && <p className="text-error text-xs mt-1.5 flex items-center gap-1"><span>⚠</span>{errors.password}</p>}
+                </div>
+                <button type="submit" id="login-submit" disabled={loading}
+                  className="btn-primary w-full py-3 text-base rounded-xl flex items-center justify-center gap-2">
+                  {loading ? <span className="animate-spin">⟳</span> : null}
+                  {loading ? 'Signing in...' : 'Sign In'}
+                </button>
+              </form>
+
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10" /></div>
+                <div className="relative text-center"><span className="px-3 text-xs text-slate-500 bg-bg-card/0 glass-light rounded">or continue with</span></div>
+              </div>
+
+              <button onClick={() => { addToast('Google OAuth coming soon! Register with email for now.', 'info'); }}
+                className="btn-secondary w-full py-3 rounded-xl flex items-center justify-center gap-3 font-medium">
+                <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" /><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" /><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" /><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" /></svg>
+                Continue with Google
+              </button>
+
+              <p className="text-center text-sm text-slate-500 mt-6">
+                Don't have an account?{' '}
+                <button onClick={() => setPage('register')} className="text-primary hover:text-primary-light font-semibold transition-colors">Sign up free</button>
+              </p>
+            </div>
+
+            <p className="text-center text-xs text-slate-600 mt-6">
+              Demo: Register an account first, then log in.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // ============================================================
+    // REGISTER PAGE
+    // ============================================================
+
+    const AVATARS = ['🧩', '🤖', '🎭', '👑', '🔮', '🧠', '⚛️', '🎯', '🦊', '🐉', '🦁', '🦋', '🌟', '🚀', '🎮'];
+
+    function RegisterPage({ setPage, onLogin, addToast }) {
+      const [form, setForm] = useState({ username: '', email: '', password: '', confirm: '' });
+      const [errors, setErrors] = useState({});
+      const [avatar, setAvatar] = useState('🧩');
+      const [loading, setLoading] = useState(false);
+
+      function validate() {
+        const e = {};
+        if (!form.username || form.username.length < 3) e.username = 'Username must be at least 3 characters';
+        if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Invalid email address';
+        if (!form.password || form.password.length < 6) e.password = 'Password must be at least 6 characters';
+        if (form.password !== form.confirm) e.confirm = 'Passwords do not match';
+        return e;
+      }
+
+      function handleSubmit(e) {
+        e.preventDefault();
+        const errs = validate();
+        if (Object.keys(errs).length) { setErrors(errs); return; }
+        setLoading(true);
+        const accounts = LS.get('sv_accounts', {});
+        const exists = Object.values(accounts).find(a => a.email === form.email || a.username === form.username);
+        if (exists) {
+          setErrors({ email: 'Email or username already taken' });
+          setLoading(false);
+          return;
+        }
+        const newUser = {
+          id: Date.now().toString(),
+          username: form.username,
+          email: form.email,
+          password: form.password,
+          avatar,
+          level: 1,
+          xp: 0,
+          rank: 'Novice',
+          gamesPlayed: 0,
+          gamesWon: 0,
+          totalScore: 0,
+          streak: 0,
+          maxStreak: 0,
+          hintsUsed: 0,
+          bestTime: null,
+          achievements: [],
+          recentGames: [],
+          streakDays: [],
+          createdAt: new Date().toISOString(),
+        };
+        // Save locally first (instant)
+        accounts[newUser.id] = newUser;
+        LS.set('sv_accounts', accounts);
+        // Also register on server (fire-and-forget)
+        apiRegisterUser(newUser, form.password);
+        onLogin(newUser);
+        addToast(`Welcome to Sudoko-Arena, ${newUser.username}! 🎉`, 'achievement');
+        setLoading(false);
+      }
+
+      return (
+        <div className="min-h-screen flex items-center justify-center pt-16 px-4 py-8">
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute -top-40 -left-40 w-80 h-80 bg-accent/15 rounded-full blur-3xl" />
+            <div className="absolute -bottom-40 -right-40 w-80 h-80 bg-primary/15 rounded-full blur-3xl" />
+          </div>
+          <div className="relative w-full max-w-md" style={{ animation: 'bounceIn 0.5s ease-out' }}>
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 rounded-2xl gradient-bg flex items-center justify-center text-2xl font-bold mx-auto mb-4 shadow-glow-primary">S</div>
+              <h1 className="text-3xl font-display font-bold text-white">Join Sudoko-Arena</h1>
+              <p className="text-slate-400 mt-2">Create your free account and start competing</p>
+            </div>
+            <div className="glass rounded-2xl p-8 shadow-glass">
+              {/* Avatar picker */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-slate-300 mb-2">Choose Your Avatar</label>
+                <div className="grid grid-cols-5 gap-2">
+                  {AVATARS.map(a => (
+                    <button type="button" key={a} onClick={() => setAvatar(a)}
+                      className={`h-10 w-full rounded-lg text-xl transition-all border ${avatar === a ? 'bg-primary/30 border-primary scale-110' : 'bg-bg-elevated border-white/10 hover:bg-primary/15'}`}>
+                      {a}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1.5">Username</label>
+                  <input id="reg-username" type="text" placeholder="CoolSolver42"
+                    value={form.username} onChange={e => { setForm({ ...form, username: e.target.value }); setErrors({ ...errors, username: '' }); }}
+                    className={`form-input ${errors.username ? 'error' : ''}`} />
+                  {errors.username && <p className="text-error text-xs mt-1 flex items-center gap-1">⚠ {errors.username}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1.5">Email</label>
+                  <input id="reg-email" type="email" placeholder="you@example.com"
+                    value={form.email} onChange={e => { setForm({ ...form, email: e.target.value }); setErrors({ ...errors, email: '' }); }}
+                    className={`form-input ${errors.email ? 'error' : ''}`} />
+                  {errors.email && <p className="text-error text-xs mt-1 flex items-center gap-1">⚠ {errors.email}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1.5">Password</label>
+                  <input id="reg-password" type="password" placeholder="Min. 6 characters"
+                    value={form.password} onChange={e => { setForm({ ...form, password: e.target.value }); setErrors({ ...errors, password: '' }); }}
+                    className={`form-input ${errors.password ? 'error' : ''}`} />
+                  {errors.password && <p className="text-error text-xs mt-1 flex items-center gap-1">⚠ {errors.password}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1.5">Confirm Password</label>
+                  <input id="reg-confirm" type="password" placeholder="Repeat password"
+                    value={form.confirm} onChange={e => { setForm({ ...form, confirm: e.target.value }); setErrors({ ...errors, confirm: '' }); }}
+                    className={`form-input ${errors.confirm ? 'error' : ''}`} />
+                  {errors.confirm && <p className="text-error text-xs mt-1 flex items-center gap-1">⚠ {errors.confirm}</p>}
+                </div>
+                <button type="submit" id="reg-submit" disabled={loading}
+                  className="btn-primary w-full py-3 text-base rounded-xl flex items-center justify-center gap-2">
+                  {loading ? <span className="animate-spin">⟳</span> : null}
+                  {loading ? 'Creating account...' : 'Create Free Account'}
+                </button>
+              </form>
+
+              <p className="text-center text-sm text-slate-500 mt-5">
+                Already have an account?{' '}
+                <button onClick={() => setPage('login')} className="text-primary hover:text-primary-light font-semibold transition-colors">Sign in</button>
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ============================================================
+    // DASHBOARD
+    // ============================================================
+
+    function DashboardPage({ user, setPage, addToast }) {
+      const rankColors = { 'Novice': 'text-slate-400', 'Amateur': 'text-green-400', 'Intermediate': 'text-blue-400', 'Advanced': 'text-purple-400', 'Expert': 'text-orange-400', 'Master': 'text-yellow-400', 'Grandmaster': 'text-red-400' };
+      const ranks = ['Novice', 'Amateur', 'Intermediate', 'Advanced', 'Expert', 'Master', 'Grandmaster'];
+      const rankIndex = ranks.indexOf(user.rank) !== -1 ? ranks.indexOf(user.rank) : 0;
+      const xpForNext = (rankIndex + 1) * 500;
+      const xpProgress = Math.min((user.xp / xpForNext) * 100, 100);
+
+      const stats = [
+        { label: 'Games Played', val: user.gamesPlayed, icon: '🎮', color: 'text-blue-400' },
+        { label: 'Games Won', val: user.gamesWon, icon: '🏆', color: 'text-yellow-400' },
+        { label: 'Win Rate', val: user.gamesPlayed ? Math.round((user.gamesWon / user.gamesPlayed) * 100) + '%' : '—', icon: '📊', color: 'text-green-400' },
+        { label: 'Best Time', val: user.bestTime ? formatTime(user.bestTime) : '—', icon: '⏱️', color: 'text-purple-400' },
+        { label: 'Total Score', val: user.totalScore.toLocaleString(), icon: '⭐', color: 'text-orange-400' },
+        { label: 'Daily Streak', val: `${user.streak} days`, icon: '🔥', color: 'text-red-400' },
+      ];
+
+      const difficultyStats = Object.entries(DIFFICULTY_CONFIG).map(([diff, cfg]) => {
+        const played = user.recentGames?.filter(g => g.difficulty === diff).length || 0;
+        return { diff, cfg, played };
+      });
+
+      return (
+        <div className="min-h-screen pt-20 pb-12 px-4" style={{ animation: 'fadeIn 0.5s ease-out' }}>
+          <div className="max-w-6xl mx-auto space-y-8">
+
+            {/* Profile Header */}
+            <div className="glass rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center gap-6">
+              <div className="relative">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-5xl shadow-glow-primary">
+                  {user.avatar}
+                </div>
+                <div className="absolute -bottom-2 -right-2 w-7 h-7 rounded-full bg-bg-card border-2 border-bg-card flex items-center justify-center text-sm font-bold text-white gradient-bg">
+                  {user.level}
+                </div>
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h1 className="text-2xl font-display font-bold text-white">{user.username}</h1>
+                  <span className={`rank-badge glass-light ${rankColors[user.rank] || 'text-slate-300'}`}>
+                    ⚔️ {user.rank}
+                  </span>
+                  {user.streak >= 7 && <span className="rank-badge bg-orange-900/40 border border-orange-500/40 text-orange-300">🔥 {user.streak}-day streak</span>}
+                </div>
+                <p className="text-slate-400 text-sm mt-1">{user.email}</p>
+                <div className="mt-3">
+                  <div className="flex justify-between text-xs text-slate-400 mb-1">
+                    <span>Level {user.level} — {user.rank}</span>
+                    <span>{user.xp} / {xpForNext} XP</span>
+                  </div>
+                  <div className="progress-bar">
+                    <div className="progress-fill" style={{ width: xpProgress + '%' }} />
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-3 self-end md:self-auto">
+                <button onClick={() => setPage('difficulty')}
+                  className="btn-primary flex items-center gap-2">🎮 Play Now</button>
+                <button onClick={() => setPage('daily')}
+                  className="btn-secondary flex items-center gap-2">📅 Daily</button>
+              </div>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+              {stats.map(s => (
+                <div key={s.label} className="stat-card">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-slate-500 text-xs font-medium uppercase tracking-wider">{s.label}</span>
+                    <span className="text-xl">{s.icon}</span>
+                  </div>
+                  <p className={`text-2xl font-display font-bold ${s.color}`}>{s.val}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Achievements */}
+              <div className="glass rounded-2xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-display font-bold text-white text-lg">Achievements</h2>
+                  <span className="text-xs text-slate-500">{user.achievements?.length || 0} / {ACHIEVEMENTS.length}</span>
+                </div>
+                <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+                  {ACHIEVEMENTS.map(a => {
+                    const unlocked = user.achievements?.includes(a.id);
+                    const rs = RARITY_STYLES[a.rarity];
+                    return (
+                      <div key={a.id}
+                        className={`achievement-badge ${rs.bg} border ${rs.border} ${!unlocked ? 'locked' : ''}`}>
+                        <span className="text-2xl">{a.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className={`font-semibold text-sm ${unlocked ? rs.text : 'text-slate-500'}`}>{a.name}</p>
+                          <p className="text-xs text-slate-500 truncate">{a.desc}</p>
+                        </div>
+                        {unlocked && <span className="text-success text-lg flex-shrink-0">✓</span>}
+                        {!unlocked && <span className="text-xs text-slate-600 capitalize flex-shrink-0">{a.rarity}</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Difficulty Breakdown + Recent Games */}
+              <div className="space-y-6">
+                <div className="glass rounded-2xl p-6">
+                  <h2 className="font-display font-bold text-white text-lg mb-4">Difficulty Breakdown</h2>
+                  <div className="space-y-3">
+                    {difficultyStats.map(({ diff, cfg, played }) => (
+                      <div key={diff}>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className={cfg.color}>{diff}</span>
+                          <span className="text-slate-500">{played} games</span>
+                        </div>
+                        <div className="progress-bar">
+                          <div className="progress-fill" style={{ width: Math.min(played * 10, 100) + '%', background: `linear-gradient(90deg, ${diff === 'Easy' ? '#22C55E' : diff === 'Medium' ? '#3B82F6' : diff === 'Hard' ? '#F59E0B' : diff === 'Expert' ? '#EF4444' : '#8B5CF6'}, ${diff === 'Easy' ? '#16A34A' : diff === 'Medium' ? '#2563EB' : diff === 'Hard' ? '#D97706' : diff === 'Expert' ? '#DC2626' : '#7C3AED'})` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="glass rounded-2xl p-6">
+                  <h2 className="font-display font-bold text-white text-lg mb-4">Recent Games</h2>
+                  {(!user.recentGames || user.recentGames.length === 0) ? (
+                    <div className="text-center py-6">
+                      <p className="text-4xl mb-2">🎮</p>
+                      <p className="text-slate-500 text-sm">No games yet. Start playing!</p>
+                      <button onClick={() => setPage('difficulty')} className="btn-primary mt-3 text-sm py-2 px-4">Play First Game</button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {user.recentGames.slice(0, 5).map((g, i) => (
+                        <div key={i} className="flex items-center justify-between p-2.5 rounded-lg glass-light text-sm">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${DIFFICULTY_CONFIG[g.difficulty]?.bg} ${DIFFICULTY_CONFIG[g.difficulty]?.color} ${DIFFICULTY_CONFIG[g.difficulty]?.border} border`}>
+                              {g.difficulty}
+                            </span>
+                            <span className={g.won ? 'text-success' : 'text-error'}>
+                              {g.won ? '✓ Won' : '✗ Lost'}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 text-slate-400 text-xs">
+                            <span>{formatTime(g.time)}</span>
+                            <span className="text-yellow-400 font-medium">+{g.score}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function formatTime(s) {
+      const m = Math.floor(s / 60), sec = s % 60;
+      return `${m}:${sec.toString().padStart(2, '0')}`;
+    }
+
+    // ============================================================
+    // DIFFICULTY SELECTION PAGE
+    // ============================================================
+
+    function DifficultyPage({ setPage, setCampaign, addToast, user }) {
+      const [hovered, setHovered] = useState(null);
+      const diffs = [
+        { key: 'Easy', icon: '🌱', time: '3-8 min', tip: 'Perfect for warming up or relaxing.' },
+        { key: 'Medium', icon: '🧩', time: '8-15 min', tip: 'A satisfying challenge for regular players.' },
+        { key: 'Hard', icon: '🔥', time: '15-25 min', tip: 'Tests your logic and deduction skills.' },
+        { key: 'Expert', icon: '🧠', time: '25-40 min', tip: 'Only for the brave. No hand-holding.' },
+        { key: 'Nightmare', icon: '👹', time: '40+ min', tip: 'The ultimate test. Legends only.' },
+      ];
+      return (
+        <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
+          <div className="max-w-3xl w-full" style={{ animation: 'slideUp 0.5s ease-out' }}>
+            <div className="text-center mb-10">
+              <h1 className="text-4xl font-display font-bold text-white mb-3">Choose Your <span className="gradient-text">Campaign</span></h1>
+              <p className="text-slate-400">Each campaign has <strong className="text-white">10 rounds</strong> — 5 normal, a Boss Round, 3 harder rounds, then a Final Boss. Puzzles are always random!</p>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+              {diffs.map(d => {
+                const cfg = DIFFICULTY_CONFIG[d.key];
+                const campaign = CAMPAIGN_CONFIG[d.key];
+                const bossIdx = campaign.findIndex(r => r.boss);
+                const progress = user?.campaignProgress?.[d.key] || 0;
+                return (
+                  <button key={d.key}
+                    onClick={() => { setCampaign({ phase: d.key, round: progress }); setPage('game'); }}
+                    onMouseEnter={() => setHovered(d.key)}
+                    onMouseLeave={() => setHovered(null)}
+                    className={`glass rounded-2xl p-6 text-left transition-all duration-200 border ${cfg.border} hover:-translate-y-1 hover:shadow-lg ${hovered === d.key ? 'bg-primary/10' : ''}`}
+                    style={d.key === 'Nightmare' ? { gridColumn: 'span 2 / span 2' } : {}}>
+                    <div className="flex items-start justify-between mb-3">
+                      <span className="text-4xl">{d.icon}</span>
+                      <span className={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${cfg.bg} ${cfg.color} border ${cfg.border}`}>
+                        +{cfg.xp} XP
+                      </span>
+                    </div>
+                    <h3 className={`font-display font-bold text-xl mb-1 ${cfg.color}`}>{d.key}</h3>
+                    <p className="text-slate-500 text-xs mb-2">{d.time} &bull; 10 rounds</p>
+                    <p className="text-slate-400 text-sm">{d.tip}</p>
+
+                    {/* Visual progression indicator */}
+                    {progress > 0 ? (
+                      <div className="mt-3 text-xs font-semibold text-emerald-400 flex items-center gap-1.5 animate-pulse">
+                        <span>📈</span> Resuming Round {progress + 1}
+                      </div>
+                    ) : (
+                      <div className="mt-3 text-xs font-semibold text-blue-400 flex items-center gap-1.5">
+                        <span>🚀</span> Start Round 1
+                      </div>
+                    )}
+
+                    <div className="mt-3 flex items-center gap-3 text-xs">
+                      <span className="text-slate-500">{DIFFICULTY_CONFIG[d.key].cells} cells</span>
+                      <span className="text-yellow-400">⚔️ Boss on round {bossIdx + 1}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex gap-4 justify-center">
+              <button onClick={() => { setCampaign({ phase: 'Hard', round: 0, daily: true }); setPage('daily'); }}
+                className="btn-secondary flex items-center gap-2 py-3 px-6">
+                📅 Daily Challenge
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ============================================================
+    // GAME PAGE
+    // ============================================================
+
+    function GamePage({ difficulty, isBoss, campaignPhase, campaignRound, campaignTotal, user, setPage, setUser, setCampaign, addToast, isDaily = false }) {
+      const [gameState, setGameState] = useState(() => {
+        const saved = loadGameState();
+        if (saved && saved.difficulty === difficulty && saved.isDaily === isDaily && saved.userId === user?.id) {
+          return saved;
+        }
+        return null;
+      });
+
+
+
+      const [puzzle, setPuzzle] = useState(null);
+      const [solved, setSolved] = useState(null);
+      const [userBoard, setUserBoard] = useState(null);
+      const [notes, setNotes] = useState(null); // 9x9 array of Set
+      const [selected, setSelected] = useState(null);
+      const [mistakes, setMistakes] = useState(0);
+      const [hintsUsed, setHintsUsed] = useState(0);
+      const [time, setTime] = useState(0);
+      const [paused, setPaused] = useState(false);
+      const [notesMode, setNotesMode] = useState(false);
+      const [history, setHistory] = useState([]);  // for undo
+      const [future, setFuture] = useState([]);  // for redo
+      const [complete, setComplete] = useState(false);
+      const [hintCell, setHintCell] = useState(null);
+      const [errorCells, setErrorCells] = useState(new Set());
+      const [showHintModal, setShowHintModal] = useState(false);
+      const [showPauseModal, setShowPauseModal] = useState(false);
+      const [showRestartModal, setShowRestartModal] = useState(false);
+      const [hintInfo, setHintInfo] = useState(null);
+      const [usedUndo, setUsedUndo] = useState(false);
+
+      const timerRef = useRef(null);
+
+      // Init puzzle
+      useEffect(() => {
+        // ── "Try Again" path: resume the SAME puzzle but fully reset (no revealed cells) ──
+        const retryData = LS.get('sv_retry_puzzle', null);
+        if (retryData && retryData.puzzle && retryData.solved) {
+          LS.set('sv_retry_puzzle', null);   // consume immediately so it's one-shot
+          saveGameState(null);               // clear any stale saved state
+          setPuzzle(retryData.puzzle.map(r => [...r]));
+          setSolved(retryData.solved.map(r => [...r]));
+          setUserBoard(retryData.puzzle.map(r => [...r]));  // only given cells, all else 0
+          setNotes(Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set())));
+          setMistakes(0);
+          setHintsUsed(0);
+          setTime(0);
+          setHistory([]);
+          setFuture([]);
+          return;
+        }
+
+        // ── Normal resume: load persisted mid-game state ──
+        if (gameState) {
+          setPuzzle(gameState.puzzle);
+          setSolved(gameState.solved);
+          setUserBoard(gameState.userBoard);
+          setNotes(gameState.notes.map(r => r.map(s => new Set(s))));
+          setMistakes(gameState.mistakes);
+          setHintsUsed(gameState.hintsUsed);
+          setTime(gameState.time);
+          setHistory(gameState.history || []);
+          return;
+        }
+
+        // ── Fresh game: generate a new random puzzle ──
+        const gen = isDaily ? generateDailyPuzzle() : generatePuzzle(difficulty);
+        setPuzzle(gen.puzzle);
+        setSolved(gen.solved);
+        setUserBoard(gen.puzzle.map(r => [...r]));
+        setNotes(Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set())));
+      }, []);
+
+      // Timer
+      useEffect(() => {
+        if (!puzzle || complete || paused) return;
+        timerRef.current = setInterval(() => setTime(t => t + 1), 1000);
+        return () => clearInterval(timerRef.current);
+      }, [puzzle, complete, paused]);
+
+      // Auto-save
+      useEffect(() => {
+        if (!puzzle || !userBoard) return;
+        const state = {
+          puzzle, solved, userBoard, difficulty, isDaily,
+          notes: notes?.map(r => r.map(s => [...s])),
+          mistakes, hintsUsed, time, history,
+          userId: user?.id,
+        };
+        saveGameState(state);
+      }, [userBoard, notes, time, mistakes, hintsUsed]);
+
+      // Keyboard
+      useEffect(() => {
+        function handleKey(e) {
+          if (!selected || complete || paused || mistakes >= 3) return;
+          const [r, c] = selected;
+          if (puzzle?.[r]?.[c] !== 0) return;
+          const num = parseInt(e.key);
+          if (num >= 1 && num <= 9) handleNumber(num);
+          if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') handleErase();
+          if (e.key === 'ArrowUp') setSelected([Math.max(r - 1, 0), c]);
+          if (e.key === 'ArrowDown') setSelected([Math.min(r + 1, 8), c]);
+          if (e.key === 'ArrowLeft') setSelected([r, Math.max(c - 1, 0)]);
+          if (e.key === 'ArrowRight') setSelected([r, Math.min(c + 1, 8)]);
+          if (e.key === 'n' || e.key === 'N') setNotesMode(nm => !nm);
+          if (e.key === 'z' && (e.ctrlKey || e.metaKey)) handleUndo();
+          if (e.key === 'y' && (e.ctrlKey || e.metaKey)) handleRedo();
+        }
+        window.addEventListener('keydown', handleKey);
+        return () => window.removeEventListener('keydown', handleKey);
+      }, [selected, puzzle, userBoard, notes, notesMode, history, future]);
+
+      function handleNumber(num) {
+        if (!selected || !puzzle || complete || paused || mistakes >= 3) return;
+        const [r, c] = selected;
+        if (puzzle[r][c] !== 0) return;
+        if (notesMode) {
+          const newNotes = notes.map(row => row.map(cell => new Set(cell)));
+          if (newNotes[r][c].has(num)) newNotes[r][c].delete(num);
+          else newNotes[r][c].add(num);
+          setHistory(h => [...h, { type: 'notes', r, c, prev: [...notes[r][c]], next: [...newNotes[r][c]] }]);
+          setFuture([]);
+          setNotes(newNotes);
+          return;
+        }
+        // Place number
+        const prevVal = userBoard[r][c];
+        const newBoard = userBoard.map(row => [...row]);
+        newBoard[r][c] = num;
+        // Clear notes for this cell
+        const newNotes = notes.map(row => row.map(cell => new Set(cell)));
+        newNotes[r][c].clear();
+        // Clear notes of same number in row/col/box
+        const br = Math.floor(r / 3) * 3, bc = Math.floor(c / 3) * 3;
+        for (let i = 0; i < 9; i++) { newNotes[r][i].delete(num); newNotes[i][c].delete(num); }
+        for (let rr = br; rr < br + 3; rr++) for (let cc = bc; cc < bc + 3; cc++) newNotes[rr][cc].delete(num);
+
+        setHistory(h => [...h, { type: 'board', r, c, prev: prevVal, next: num }]);
+        setFuture([]);
+
+        if (solved && num !== solved[r][c]) {
+          const newErrors = new Set(errorCells);
+          newErrors.add(`${r}-${c}`);
+          setErrorCells(newErrors);
+          const newMistakes = mistakes + 1;
+          setMistakes(newMistakes);
+          if (newMistakes >= 3) {
+            addToast('3 mistakes — Game Over!', 'error');
+            // Reveal the solved board, stop timer, then go to results immediately
+            clearInterval(timerRef.current);
+            setTimeout(() => {
+              if (solved) setUserBoard(solved.map(rowArr => [...rowArr]));
+              setNotes(Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set())));
+              setComplete(true);
+              // Trigger results navigation with loss state
+              handleCompleteAfterMistakes(newMistakes);
+            }, 600);
+          }
+          setTimeout(() => {
+            setErrorCells(ec => { const ne = new Set(ec); ne.delete(`${r}-${c}`); return ne; });
+          }, 800);
+        } else {
+          setHintCell(null);
+        }
+        setUserBoard(newBoard);
+        setNotes(newNotes);
+        // Check complete (all cells correctly filled)
+        const allFilled = newBoard.every((row, ri) => row.every((v, ci) => v !== 0 && (!solved || v === solved[ri][ci])));
+        if (allFilled) handleComplete(newBoard);
+      }
+
+      function handleErase() {
+        if (!selected || complete || paused || mistakes >= 3) return;
+        const [r, c] = selected;
+        if (puzzle[r][c] !== 0) return;
+        if (userBoard[r][c] !== 0) {
+          const prev = userBoard[r][c];
+          const newBoard = userBoard.map(row => [...row]);
+          newBoard[r][c] = 0;
+          setHistory(h => [...h, { type: 'board', r, c, prev, next: 0 }]);
+          setFuture([]);
+          setUserBoard(newBoard);
+        }
+      }
+
+      function handleUndo() {
+        if (history.length === 0 || complete || paused || mistakes >= 3) return;
+        setUsedUndo(true);
+        const last = history[history.length - 1];
+        const newHistory = history.slice(0, -1);
+        setHistory(newHistory);
+        setFuture(f => [last, ...f]);
+        if (last.type === 'board') {
+          const newBoard = userBoard.map(row => [...row]);
+          newBoard[last.r][last.c] = last.prev;
+          setUserBoard(newBoard);
+        } else if (last.type === 'notes') {
+          const newNotes = notes.map(row => row.map(cell => new Set(cell)));
+          newNotes[last.r][last.c] = new Set(last.prev);
+          setNotes(newNotes);
+        }
+      }
+
+      function handleRedo() {
+        if (future.length === 0 || complete || paused || mistakes >= 3) return;
+        const next = future[0];
+        setFuture(f => f.slice(1));
+        setHistory(h => [...h, next]);
+        if (next.type === 'board') {
+          const newBoard = userBoard.map(row => [...row]);
+          newBoard[next.r][next.c] = next.next;
+          setUserBoard(newBoard);
+        } else if (next.type === 'notes') {
+          const newNotes = notes.map(row => row.map(cell => new Set(cell)));
+          newNotes[next.r][next.c] = new Set(next.next);
+          setNotes(newNotes);
+        }
+      }
+
+      function handleHint() {
+        if (!selected || !solved || !puzzle || complete || paused || mistakes >= 3) return;
+        const [r, c] = selected;
+        if (puzzle[r][c] !== 0 || userBoard[r][c] === solved[r][c]) {
+          // Find first empty cell
+          for (let ri = 0; ri < 9; ri++) {
+            for (let ci = 0; ci < 9; ci++) {
+              if (puzzle[ri][ci] === 0 && userBoard[ri][ci] !== solved[ri][ci]) {
+                setSelected([ri, ci]);
+                const info = getSmartHint(userBoard, solved, ri, ci);
+                setHintInfo(info);
+                setShowHintModal(true);
+                setHintsUsed(h => h + 1);
+                return;
+              }
+            }
+          }
+          return;
+        }
+        const info = getSmartHint(userBoard, solved, r, c);
+        setHintInfo(info);
+        setShowHintModal(true);
+        setHintsUsed(h => h + 1);
+      }
+
+      function applyHint() {
+        if (!hintInfo || !selected || complete || paused || mistakes >= 3) return;
+        const [r, c] = selected;
+        const newBoard = userBoard.map(row => [...row]);
+        newBoard[r][c] = hintInfo.num;
+        const newNotes = notes.map(row => row.map(cell => new Set(cell)));
+        newNotes[r][c].clear();
+        setUserBoard(newBoard);
+        setNotes(newNotes);
+        setHintCell(`${r}-${c}`);
+        setShowHintModal(false);
+        const allFilled = newBoard.every((row, ri) => row.every((v, ci) => v !== 0 && (!solved || v === solved[ri][ci])));
+        if (allFilled) handleComplete(newBoard);
+      }
+
+
+
+      function handleRestart() {
+        if (complete || mistakes >= 3) return;
+        clearInterval(timerRef.current);
+        setPuzzle(null);
+        setUserBoard(null);
+        setNotes(null);
+        setMistakes(0);
+        setHintsUsed(0);
+        setTime(0);
+        setHistory([]);
+        setFuture([]);
+        setComplete(false);
+        setHintCell(null);
+        setSelected(null);
+        setGameState(null);
+        saveGameState(null);
+        const gen = isDaily ? generateDailyPuzzle() : generatePuzzle(difficulty);
+        setPuzzle(gen.puzzle);
+        setSolved(gen.solved);
+        setUserBoard(gen.puzzle.map(r => [...r]));
+        setNotes(Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set())));
+        setShowRestartModal(false);
+      }
+
+      // Called when board is fully and correctly filled by the player
+      function handleComplete(board) {
+        clearInterval(timerRef.current);
+        setComplete(true);
+        handleCompleteWithWon(true);
+      }
+
+      // Called when game ends due to 3 mistakes (board already revealed externally)
+      function handleCompleteAfterMistakes(finalMistakes) {
+        handleCompleteWithWon(false, finalMistakes);
+      }
+
+      // Core logic: compute stats, save user, navigate to results
+      // won=false + no forfeit = loss (3 mistakes) | forfeit=true = user revealed solution
+      function handleCompleteWithWon(won, overrideMistakes = null, forfeit = false) {
+        const finalMistakes = overrideMistakes !== null ? overrideMistakes : mistakes;
+        // forfeit: skip score entirely — no navigation, overlay handles it
+        if (forfeit) { setShowForfeitOverlay(true); return; }
+        const score = calculateScore(difficulty, time, hintsUsed, finalMistakes);
+        if (user) {
+          const newAchievements = [...(user.achievements || [])];
+          if (won) {
+            if (!newAchievements.includes('first_victory')) { newAchievements.push('first_victory'); addToast('🏆 Achievement: First Victory!', 'achievement'); }
+            if (!newAchievements.includes('speed_runner') && time < 300) { newAchievements.push('speed_runner'); addToast('⚡ Achievement: Speed Runner!', 'achievement'); }
+            if (!newAchievements.includes('perfectionist') && finalMistakes === 0) { newAchievements.push('perfectionist'); addToast('💎 Achievement: Perfectionist!', 'achievement'); }
+            if (!newAchievements.includes('genius') && difficulty === 'Expert') { newAchievements.push('genius'); addToast('🧠 Achievement: Genius!', 'achievement'); }
+            if (!newAchievements.includes('nightmare_slayer') && difficulty === 'Nightmare') { newAchievements.push('nightmare_slayer'); addToast('👹 Achievement: Nightmare Slayer!', 'achievement'); }
+            if (!newAchievements.includes('hint_free') && hintsUsed === 0) { newAchievements.push('hint_free'); addToast('🎯 Achievement: Purist!', 'achievement'); }
+            if (!newAchievements.includes('no_undo') && !usedUndo) { newAchievements.push('no_undo'); addToast('🪨 Achievement: Iron Mind!', 'achievement'); }
+            if (!newAchievements.includes('comeback') && finalMistakes >= 2) { newAchievements.push('comeback'); addToast('💪 Achievement: Comeback Kid!', 'achievement'); }
+          }
+          const hour = new Date().getHours();
+          if (!newAchievements.includes('early_bird') && hour < 8) { newAchievements.push('early_bird'); addToast('🌅 Achievement: Early Bird!', 'achievement'); }
+          if (!newAchievements.includes('night_owl') && hour >= 0 && hour < 4) { newAchievements.push('night_owl'); addToast('🦉 Achievement: Night Owl!', 'achievement'); }
+          const dow = new Date().getDay();
+          if (!newAchievements.includes('weekender') && (dow === 0 || dow === 6)) { newAchievements.push('weekender'); addToast('🎉 Achievement: Weekend Warrior!', 'achievement'); }
+
+          const today = new Date().toDateString();
+          const streakDays = user.streakDays || [];
+          const newStreak = streakDays.includes(today) ? user.streak : user.streak + 1;
+          const newStreakDays = streakDays.includes(today) ? streakDays : [...streakDays, today].slice(-60);
+          if (newStreak >= 7 && !newAchievements.includes('consistent')) {
+            newAchievements.push('consistent');
+            addToast('🔥 Achievement: Consistent Player!', 'achievement');
+          }
+
+          const newGamesPlayed = user.gamesPlayed + 1;
+          const newGamesWon = user.gamesWon + (won ? 1 : 0);
+          const newXP = user.xp + (won ? score.total : Math.floor(score.total * 0.3));
+          const newLevel = Math.floor(newXP / 500) + 1;
+          const newTotalScore = user.totalScore + score.total;
+          const rankThresholds = [0, 5, 15, 30, 50, 75, 100];
+          const rankNames = ['Novice', 'Amateur', 'Intermediate', 'Advanced', 'Expert', 'Master', 'Grandmaster'];
+          const rankIdx = rankThresholds.findLastIndex(t => newGamesWon >= t);
+          const newRank = rankNames[rankIdx] || 'Novice';
+          const newBestTime = won && (!user.bestTime || time < user.bestTime) ? time : user.bestTime;
+
+          const newRecentGames = [
+            { difficulty, time, score: score.total, won, mistakes: finalMistakes, hintsUsed, date: new Date().toISOString() },
+            ...(user.recentGames || []),
+          ].slice(0, 20);
+
+          const currentProgress = user.campaignProgress || {};
+          const newProgress = { ...currentProgress };
+          if (won && campaignPhase && typeof campaignRound === 'number') {
+            const nextRoundIndex = campaignRound + 1;
+            newProgress[campaignPhase] = nextRoundIndex >= 10 ? 0 : nextRoundIndex;
+          }
+
+          const updatedUser = {
+            ...user, gamesPlayed: newGamesPlayed, gamesWon: newGamesWon, xp: newXP, level: newLevel,
+            totalScore: newTotalScore, rank: newRank, achievements: newAchievements, recentGames: newRecentGames,
+            streak: newStreak, maxStreak: Math.max(user.maxStreak || 0, newStreak), streakDays: newStreakDays,
+            bestTime: newBestTime,
+            campaignProgress: newProgress,
+          };
+
+          // Update leaderboard
+          const lb = loadLeaderboard();
+          const myEntry = lb.find(e => e.id === user.id);
+          if (myEntry) {
+            myEntry.score = newTotalScore; myEntry.games = newGamesPlayed;
+            lb.sort((a, b) => b.score - a.score); lb.forEach((e, i) => e.rank = i + 1);
+          } else {
+            lb.push({ id: user.id, username: user.username, avatar: user.avatar, score: newTotalScore, games: newGamesPlayed, rank: lb.length + 1 });
+            lb.sort((a, b) => b.score - a.score); lb.forEach((e, i) => e.rank = i + 1);
+          }
+          LS.set('sv_leaderboard', lb);
+
+          const accounts = LS.get('sv_accounts', {});
+          accounts[user.id] = updatedUser;
+          LS.set('sv_accounts', accounts);
+          setUser(updatedUser);
+          apiSaveUser(updatedUser);
+          apiUpdateLeaderboard({ id: user.id, username: user.username, avatar: user.avatar, score: newTotalScore, games: newGamesPlayed });
+          apiSaveGameResult(user.id, {
+            gameId: `game_${user.id}_${Date.now()}`,
+            difficulty, status: won ? 'completed' : 'failed',
+            timeElapsed: time, mistakesCount: finalMistakes, hintsUsed, score: score.total, won,
+          });
+
+          // Store result — preserve solved board so loss screen can show solution
+          const resultData = {
+            score, difficulty, time, mistakes: finalMistakes, hintsUsed, won,
+            solved: solved ? solved.map(r => [...r]) : null,   // for "Show Solution" on loss
+            puzzle: puzzle ? puzzle.map(r => [...r]) : null,
+            campaignPhase, campaignRound, campaignTotal,
+            newAchievements: newAchievements.filter(a => !(user.achievements || []).includes(a)),
+          };
+          LS.set('sv_last_result', resultData);
+          // Only clear game state on win; keep it for loss so solution can be shown
+          if (won) saveGameState(null);
+
+          setTimeout(() => { setPage('results'); }, 300);
+        }
+      }
+
+      if (!puzzle || !userBoard || !notes) {
+        return (
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-6xl animate-spin-slow mb-4">⟳</div>
+              <p className="text-slate-400">Generating your puzzle...</p>
+            </div>
+          </div>
+        );
+      }
+
+      // Compute highlighted cells (same row/col/box as selected)
+      const highlightSet = new Set();
+      const sameNumberSet = new Set();
+      if (selected) {
+        const [sr, sc] = selected;
+        for (let i = 0; i < 9; i++) { highlightSet.add(`${sr}-${i}`); highlightSet.add(`${i}-${sc}`); }
+        const br = Math.floor(sr / 3) * 3, bc = Math.floor(sc / 3) * 3;
+        for (let r = br; r < br + 3; r++) for (let c = bc; c < bc + 3; c++) highlightSet.add(`${r}-${c}`);
+        const selVal = userBoard[sr][sc];
+        if (selVal !== 0) {
+          for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++)
+            if (userBoard[r][c] === selVal && !(r === sr && c === sc)) sameNumberSet.add(`${r}-${c}`);
+        }
+      }
+
+      // Count remaining digits
+      const digitCount = {};
+      for (let d = 1; d <= 9; d++) {
+        let cnt = 0;
+        for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) if (userBoard[r][c] === d) cnt++;
+        digitCount[d] = cnt;
+      }
+
+      const progress = userBoard.flat().filter(v => v !== 0).length / 81 * 100;
+
+      return (
+        <div className="min-h-screen pt-20 pb-12 px-4" style={{ animation: 'fadeIn 0.4s ease-out' }}>
+          <div className="max-w-4xl mx-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <button onClick={() => setPage('difficulty')} className="btn-ghost text-sm flex items-center gap-1">
+                  ← Back
+                </button>
+                <div className="flex items-center gap-2">
+                  {isDaily && <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-yellow-900/40 border border-yellow-500/40 text-yellow-300">📅 Daily</span>}
+                  {isBoss && (
+                    <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-red-900/60 border border-red-400/60 text-red-300 animate-pulse">⚔️ {campaignRound === campaignTotal - 1 ? 'FINAL BOSS' : 'BOSS ROUND'}</span>
+                  )}
+                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${DIFFICULTY_CONFIG[difficulty]?.bg} ${DIFFICULTY_CONFIG[difficulty]?.color} ${DIFFICULTY_CONFIG[difficulty]?.border}`}>
+                    {difficulty}
+                  </span>
+                  {campaignTotal > 0 && (
+                    <span className="text-xs text-slate-500 font-medium">Round {(campaignRound || 0) + 1}/{campaignTotal}</span>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-sm">
+                  {[0, 1, 2].map(i => (
+                    <span key={i} className={`text-lg ${i < mistakes ? 'text-error' : 'text-slate-700'}`}>♥</span>
+                  ))}
+                  <span className="text-slate-400 text-xs">{mistakes}/3</span>
+                </div>
+                <div className="glass px-3 py-1.5 rounded-lg font-mono font-bold text-lg text-white min-w-[70px] text-center">
+                  {paused ? '⏸' : formatTime(time)}
+                </div>
+                <button onClick={() => { setPaused(p => !p); setShowPauseModal(p => !p); }}
+                  className="btn-ghost text-lg">{paused ? '▶' : '⏸'}</button>
+              </div>
+            </div>
+
+            {/* Progress bar */}
+            <div className="progress-bar mb-6">
+              <div className="progress-fill" style={{ width: progress + '%' }} />
+            </div>
+
+            <div className="flex flex-col lg:flex-row gap-6 items-start justify-center">
+              {/* Sudoku Board */}
+              <div className="w-full max-w-md mx-auto lg:mx-0 flex-shrink-0">
+                <div className="sudoku-grid bg-bg-card shadow-glass relative">
+                  {userBoard.map((row, r) =>
+                    row.map((val, c) => {
+                      const key = `${r}-${c}`;
+                      const isGiven = puzzle[r][c] !== 0;
+                      const isSel = selected?.[0] === r && selected?.[1] === c;
+                      const isHigh = !isSel && highlightSet.has(key);
+                      const isSame = sameNumberSet.has(key);
+                      const isErr = errorCells.has(key);
+                      const isHint = hintCell === key;
+                      const cellNotes = notes[r][c];
+                      const hasNotes = cellNotes.size > 0;
+                      const boxR = Math.floor(r / 3), boxC = Math.floor(c / 3);
+
+                      return (
+                        <div key={key}
+                          onClick={() => { if (!complete && !paused && mistakes < 3) setSelected([r, c]); }}
+                          className={`sudoku-cell
+                        ${(boxR + boxC) % 2 === 0 ? 'bg-bg-card' : 'bg-bg-elevated/40'}
+                        ${isSel ? 'cell-selected' : ''}
+                        ${isHigh && !isSel ? 'cell-highlighted' : ''}
+                        ${isSame ? 'cell-same-number' : ''}
+                        ${isErr ? 'cell-error' : ''}
+                        ${isHint ? 'cell-hint' : ''}
+                        ${isGiven ? 'cell-given' : (!isErr && !isHint ? 'cell-user' : '')}
+                      `}
+                          style={{
+                            borderRight: (c + 1) % 3 === 0 && c < 8 ? '2px solid rgba(37,99,235,0.4)' : '1px solid rgba(255,255,255,0.06)',
+                            borderBottom: (r + 1) % 3 === 0 && r < 8 ? '2px solid rgba(37,99,235,0.4)' : '1px solid rgba(255,255,255,0.06)',
+                          }}>
+                          {val !== 0 ? (
+                            val
+                          ) : hasNotes ? (
+                            <div className="notes-grid w-full h-full">
+                              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => (
+                                <div key={n} className="note-num">{cellNotes.has(n) ? n : ''}</div>
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
+                      );
+                    })
+                  )}
+                  {/* Completion overlay */}
+                  {complete && (
+                    <div className="absolute inset-0 flex items-center justify-center rounded-lg"
+                      style={{ background: 'rgba(15,23,42,0.85)', backdropFilter: 'blur(4px)' }}>
+                      <div className="text-center" style={{ animation: 'bounceIn 0.5s ease-out' }}>
+                        {mistakes >= 3 ? (
+                          <>
+                            <div className="text-6xl mb-2">💔</div>
+                            <p className="text-2xl font-display font-bold text-red-500">Game Over!</p>
+                            <p className="text-slate-400 text-sm mt-1">3 mistakes reached. Loading results...</p>
+                          </>
+                        ) : (
+                          <>
+                            <div className="text-6xl mb-2">🎉</div>
+                            <p className="text-2xl font-display font-bold gradient-text">Puzzle Complete!</p>
+                            <p className="text-slate-400 text-sm mt-1">Loading results...</p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {paused && (
+                    <div className="absolute inset-0 flex items-center justify-center rounded-lg"
+                      style={{ background: 'rgba(15,23,42,0.9)', backdropFilter: 'blur(8px)' }}>
+                      <div className="text-center">
+                        <div className="text-5xl mb-3">⏸</div>
+                        <p className="text-white font-bold text-xl">Game Paused</p>
+                        <button onClick={() => { setPaused(false); setShowPauseModal(false); }}
+                          className="btn-primary mt-4 py-2 px-6">Resume</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right panel */}
+              <div className="w-full max-w-md mx-auto lg:max-w-52 space-y-4">
+                {/* Number pad */}
+                <div className="glass rounded-xl p-3">
+                  <div className="num-pad">
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => (
+                      <button key={n} onClick={() => handleNumber(n)}
+                        className={`num-btn ${digitCount[n] >= 9 ? 'num-disabled' : ''}`}
+                        title={`${9 - digitCount[n]} remaining`}>
+                        <span>{n}</span>
+                      </button>
+                    ))}
+                    <button onClick={handleErase} className="num-btn text-slate-400 text-sm">⌫</button>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-xs text-slate-500 px-1">
+                    <span>Tap a number or use keyboard (1-9)</span>
+                  </div>
+                </div>
+
+                {/* Notes toggle */}
+                <button onClick={() => setNotesMode(m => !m)}
+                  className={`w-full py-2.5 px-4 rounded-xl border text-sm font-medium transition-all flex items-center justify-between ${notesMode ? 'bg-accent/20 border-accent/40 text-accent' : 'glass-light border-white/10 text-slate-400 hover:text-slate-200'}`}>
+                  <span>✏️ Notes Mode</span>
+                  <span className={`w-4 h-4 rounded-full border-2 transition-colors ${notesMode ? 'bg-accent border-accent' : 'border-slate-600'}`} />
+                </button>
+
+                {/* Controls */}
+                <div className="glass rounded-xl p-3 grid grid-cols-2 gap-2">
+                  {[
+                    { label: '↩ Undo', icon: '', action: handleUndo, disabled: history.length === 0 },
+                    { label: '↪ Redo', icon: '', action: handleRedo, disabled: future.length === 0 },
+                    { label: '💡 Hint', icon: '', action: handleHint, disabled: hintsUsed >= 5 },
+                    { label: '🔄 Restart', icon: '', action: () => setShowRestartModal(true) },
+                  ].map(btn => (
+                    <button key={btn.label} onClick={btn.action} disabled={btn.disabled}
+                      className={`btn-ghost text-xs py-2 rounded-lg border border-white/5 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-1 ${btn.className || ''}`}>
+                      {btn.label}
+                      {btn.label.includes('Hint') && hintsUsed > 0 && <span className="text-warning">({hintsUsed}/5)</span>}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Stats mini */}
+                <div className="glass rounded-xl p-3 text-xs text-slate-500 space-y-1.5">
+                  <div className="flex justify-between"><span>Hints used</span><span className="text-warning">{hintsUsed}/5</span></div>
+                  <div className="flex justify-between"><span>Undo count</span><span>{history.filter(h => h).length}</span></div>
+                  <div className="flex justify-between"><span>Notes mode</span><span className={notesMode ? 'text-accent' : 'text-slate-600'}>{notesMode ? 'ON' : 'OFF'}</span></div>
+                </div>
+
+                <p className="text-xs text-slate-600 text-center">Press N to toggle notes · Ctrl+Z to undo</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Hint Modal */}
+          {showHintModal && hintInfo && (
+            <div className="modal-overlay" onClick={() => setShowHintModal(false)}>
+              <div className="modal-card" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-xl">💡</div>
+                  <h3 className="text-xl font-display font-bold text-white">Smart Hint</h3>
+                </div>
+                <div className="glass-light rounded-xl p-4 mb-4">
+                  <p className="text-slate-300 text-sm leading-relaxed">{hintInfo.reason}</p>
+                </div>
+                <p className="text-slate-500 text-xs mb-4">
+                  The answer is <span className="text-primary font-bold text-base">{hintInfo.num}</span>.
+                  Applying this hint will use one of your {5 - hintsUsed} remaining hints.
+                </p>
+                <div className="flex gap-3">
+                  <button onClick={applyHint} className="btn-primary flex-1">Apply Hint ({5 - hintsUsed} left)</button>
+                  <button onClick={() => setShowHintModal(false)} className="btn-secondary flex-1">Just the tip, thanks</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+
+
+          {/* Restart Modal */}
+          {showRestartModal && (
+            <div className="modal-overlay" onClick={() => setShowRestartModal(false)}>
+              <div className="modal-card" onClick={e => e.stopPropagation()}>
+                <div className="text-4xl text-center mb-3">🔄</div>
+                <h3 className="text-xl font-display font-bold text-white text-center mb-2">Start New Puzzle?</h3>
+                <p className="text-slate-400 text-sm text-center mb-6">A completely fresh random puzzle of the same difficulty will be generated.</p>
+                <div className="flex gap-3">
+                  <button onClick={handleRestart} className="btn-primary flex-1">New Puzzle</button>
+                  <button onClick={() => setShowRestartModal(false)} className="btn-secondary flex-1">Cancel</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+
+        </div>
+      );
+    }
+
+    // ============================================================
+    // RESULTS PAGE
+    // ============================================================
+
+    function ResultsPage({ setPage, user, campaign, setCampaign }) {
+      const result = LS.get('sv_last_result', null);
+      const [animScore, setAnimScore] = useState(0);
+      const [showSolution, setShowSolution] = useState(false);
+
+      useEffect(() => {
+        if (!result) return;
+        let frame = 0;
+        const total = 60;
+        const timer = setInterval(() => {
+          frame++;
+          setAnimScore(Math.floor(result.score.total * Math.min(frame / total, 1)));
+          if (frame >= total) clearInterval(timer);
+        }, 20);
+        return () => clearInterval(timer);
+      }, []);
+
+      if (!result) {
+        return (
+          <div className="min-h-screen pt-24 flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-slate-400">No recent game found.</p>
+              <button onClick={() => setPage('difficulty')} className="btn-primary mt-4">Play Now</button>
+            </div>
+          </div>
+        );
+      }
+
+      const { score, difficulty, time, mistakes, hintsUsed, won, solved, puzzle, newAchievements,
+        campaignPhase, campaignRound, campaignTotal } = result;
+      const isWin = !!won;
+      const isLoss = !won;
+
+      // Campaign: next round info
+      const nextRound = (typeof campaignRound === 'number' && campaignTotal > 0) ? campaignRound + 1 : null;
+      const isCampaignComplete = nextRound !== null && nextRound >= campaignTotal;
+      const nextRoundInfo = (nextRound !== null && !isCampaignComplete && campaignPhase)
+        ? CAMPAIGN_CONFIG[campaignPhase]?.[nextRound] : null;
+
+      function handleNextRound() {
+        if (!campaignPhase || nextRound === null) { setPage('difficulty'); return; }
+        setCampaign({ phase: campaignPhase, round: nextRound });
+        LS.remove?.('sv_game'); saveGameState(null);
+        setPage('game');
+      }
+
+      function handleNewGame() {
+        setCampaign({ phase: 'Easy', round: 0 });
+        saveGameState(null);
+        setPage('difficulty');
+      }
+
+      return (
+        <div className="min-h-screen pt-20 pb-12 px-4 flex items-center justify-center">
+          <div className="max-w-lg w-full space-y-6" style={{ animation: 'slideUp 0.6s ease-out' }}>
+
+            {/* Result card */}
+            <div className={`glass rounded-3xl p-8 text-center relative overflow-hidden border ${isWin ? 'border-yellow-500/20' : 'border-red-500/20'
+              }`}>
+              <div className={`absolute inset-0 bg-gradient-to-br ${isWin ? 'from-yellow-500/10 to-green-500/5' : 'from-red-500/10 to-red-900/5'
+                }`} />
+              <div className="relative">
+                <div className="text-7xl mb-4" style={{ animation: 'bounceIn 0.6s ease-out' }}>
+                  {isWin ? (isCampaignComplete ? '🌟' : '🏆') : '💔'}
+                </div>
+                <h1 className="text-4xl font-display font-black text-white mb-1">
+                  {isWin ? (isCampaignComplete ? 'Campaign Complete!' : 'Round Won!') : 'Game Over!'}
+                </h1>
+                <p className={`text-sm mb-1 font-medium ${isWin ? 'text-green-400' : 'text-red-400'}`}>
+                  {isWin ? (isCampaignComplete ? '🎉 You completed the entire campaign!' : `Round ${(campaignRound || 0) + 1}${campaignTotal ? ' of ' + campaignTotal : ''} cleared!`) : '3 mistakes reached.'}
+                </p>
+                <p className="text-slate-400 text-sm mb-6">{difficulty} &bull; {formatTime(time)}</p>
+
+                {/* Score */}
+                <div className={`text-6xl font-display font-black mb-2 ${isWin ? 'gradient-text' : 'text-red-400'}`}
+                  style={{ animation: 'winner 0.6s ease-out' }}>
+                  {animScore.toLocaleString()}
+                </div>
+                <p className="text-slate-500 text-sm mb-6">{isWin ? 'points earned' : 'points (partial credit)'}</p>
+
+                {/* Score breakdown */}
+                <div className="glass-light rounded-xl p-4 text-left space-y-2 mb-6">
+                  <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Score Breakdown</h3>
+                  {[
+                    { label: 'Base Score', val: `+${score.base}`, color: 'text-slate-300' },
+                    { label: `${difficulty} Bonus`, val: `+${score.diffBonus}`, color: 'text-green-400' },
+                    { label: 'Time Penalty', val: `-${score.timePenalty}`, color: score.timePenalty ? 'text-red-400' : 'text-slate-500' },
+                    { label: 'Hint Penalty', val: `-${score.hintPenalty}`, color: score.hintPenalty ? 'text-red-400' : 'text-slate-500' },
+                    { label: 'Mistake Penalty', val: `-${score.mistakePenalty}`, color: score.mistakePenalty ? 'text-red-400' : 'text-slate-500' },
+                  ].map(row => (
+                    <div key={row.label} className="flex justify-between text-sm">
+                      <span className="text-slate-400">{row.label}</span>
+                      <span className={`font-semibold ${row.color}`}>{row.val}</span>
+                    </div>
+                  ))}
+                  <div className="border-t border-white/10 pt-2 flex justify-between font-bold text-white">
+                    <span>Total</span>
+                    <span className={isWin ? 'gradient-text' : 'text-red-400'}>{score.total.toLocaleString()}</span>
+                  </div>
+                </div>
+
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { label: 'Time', val: formatTime(time), icon: '⏱️' },
+                    { label: 'Mistakes', val: `${mistakes}/3`, icon: '💔' },
+                    { label: 'Hints', val: `${hintsUsed}/5`, icon: '💡' },
+                  ].map(s => (
+                    <div key={s.label} className="glass-light rounded-xl p-3 text-center">
+                      <p className="text-2xl mb-1">{s.icon}</p>
+                      <p className="text-sm font-bold text-white">{s.val}</p>
+                      <p className="text-xs text-slate-500">{s.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Next round preview (win only) */}
+            {isWin && nextRoundInfo && !isCampaignComplete && (
+              <div className="glass-light rounded-2xl p-4 border border-primary/20 flex items-center gap-4">
+                <div className="text-3xl">{nextRoundInfo.boss ? '⚔️' : '➡️'}</div>
+                <div className="flex-1">
+                  <p className="text-white font-semibold text-sm">
+                    Next: {nextRoundInfo.label} &mdash; {nextRoundInfo.diff}
+                    {nextRoundInfo.boss && <span className="ml-2 text-xs text-red-400 font-bold">BOSS ROUND</span>}
+                  </p>
+                  <p className="text-slate-500 text-xs">{DIFFICULTY_CONFIG[nextRoundInfo.diff]?.cells} cells pre-filled</p>
+                </div>
+                <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${DIFFICULTY_CONFIG[nextRoundInfo.diff]?.bg} ${DIFFICULTY_CONFIG[nextRoundInfo.diff]?.color} ${DIFFICULTY_CONFIG[nextRoundInfo.diff]?.border}`}>
+                  +{DIFFICULTY_CONFIG[nextRoundInfo.diff]?.xp} XP
+                </span>
+              </div>
+            )}
+
+            {/* Loss: Reveal Solution */}
+            {isLoss && solved && (
+              <div className="glass rounded-2xl p-5">
+                <button
+                  onClick={() => setShowSolution(s => !s)}
+                  className="w-full flex items-center justify-between text-left">
+                  <span className="font-display font-bold text-white flex items-center gap-2">
+                    🔍 {showSolution ? 'Hide Solution' : 'Reveal Solution'}
+                  </span>
+                  <span className="text-slate-400 text-sm">{showSolution ? '▲ Hide' : '▼ Show'}</span>
+                </button>
+                {showSolution && (
+                  <div className="mt-4">
+                    <p className="text-xs text-slate-500 text-center mb-3">Correct solution — given numbers in white, solution in green</p>
+                    <div className="sudoku-grid bg-bg-card" style={{ fontSize: '0.8rem', maxWidth: '320px', margin: '0 auto' }}>
+                      {solved.map((row, r) =>
+                        row.map((val, c) => {
+                          const isGiven = puzzle && puzzle[r][c] !== 0;
+                          const boxR = Math.floor(r / 3), boxC = Math.floor(c / 3);
+                          return (
+                            <div key={`s-${r}-${c}`}
+                              className={`sudoku-cell ${isGiven ? 'cell-given' : 'cell-user'} ${(boxR + boxC) % 2 === 0 ? 'bg-bg-card' : 'bg-bg-elevated/30'}`}
+                              style={{ minHeight: '2rem', color: isGiven ? undefined : '#4ade80' }}>
+                              {val}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Achievements (win only) */}
+            {isWin && newAchievements && newAchievements.length > 0 && (
+              <div className="glass rounded-2xl p-5">
+                <h3 className="font-display font-bold text-white mb-3 flex items-center gap-2">🎖️ New Achievements!</h3>
+                <div className="space-y-2">
+                  {newAchievements.map(id => {
+                    const a = ACHIEVEMENTS.find(x => x.id === id);
+                    if (!a) return null;
+                    const rs = RARITY_STYLES[a.rarity];
+                    return (
+                      <div key={id} className={`achievement-badge ${rs.bg} border ${rs.border}`} style={{ animation: 'bounceIn 0.5s ease-out' }}>
+                        <span className="text-2xl">{a.icon}</span>
+                        <div><p className={`font-semibold text-sm ${rs.text}`}>{a.name}</p><p className="text-xs text-slate-500">{a.desc}</p></div>
+                        <span className="text-xs text-slate-500 capitalize ml-auto">{a.rarity}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            {isWin && !isCampaignComplete && nextRoundInfo && (
+              <>
+                <button onClick={handleNextRound} className="btn-primary w-full py-4 text-lg flex items-center justify-center gap-2">
+                  {nextRoundInfo.boss ? '⚔️ Boss Round →' : '➡️ Next Round'}
+                </button>
+                <div className="flex gap-3">
+                  <button onClick={handleNewGame} className="btn-secondary flex-1 py-3">🎮 New Campaign</button>
+                  <button onClick={() => setPage('leaderboard')} className="btn-secondary flex-1 py-3">🏆 Leaderboard</button>
+                </div>
+              </>
+            )}
+            {isWin && isCampaignComplete && (
+              <>
+                <div className="glass-light rounded-2xl p-5 text-center border border-yellow-500/30">
+                  <p className="text-4xl mb-2">🌟</p>
+                  <p className="text-yellow-300 font-bold">Campaign Complete! All 10 rounds conquered!</p>
+                </div>
+                <div className="flex gap-3">
+                  <button onClick={handleNewGame} className="btn-primary flex-1 py-3">🎮 New Campaign</button>
+                  <button onClick={() => setPage('leaderboard')} className="btn-secondary flex-1 py-3">🏆 Leaderboard</button>
+                </div>
+              </>
+            )}
+            {isWin && !nextRoundInfo && !isCampaignComplete && (
+              <div className="flex gap-3">
+                <button onClick={handleNewGame} className="btn-primary flex-1 py-3">🎮 New Game</button>
+                <button onClick={() => setPage('leaderboard')} className="btn-secondary flex-1 py-3">🏆 Leaderboard</button>
+              </div>
+            )}
+
+            {isLoss && (
+              <>
+                <button
+                  onClick={() => {
+                    // Store original puzzle so GamePage reloads it fresh (blank user cells)
+                    const lastResult = LS.get('sv_last_result', null);
+                    if (lastResult?.puzzle && lastResult?.solved) {
+                      LS.set('sv_retry_puzzle', { puzzle: lastResult.puzzle, solved: lastResult.solved });
+                    }
+                    saveGameState(null); // clear the revealed-board saved state
+                    setPage('game');
+                  }}
+                  className="btn-primary w-full py-3 text-base flex items-center justify-center gap-2">
+                  🔄 Try Again (Same Puzzle)
+                </button>
+                <div className="flex gap-3">
+                  <button onClick={handleNewGame} className="btn-secondary flex-1 py-3">
+                    🎮 New Game
+                  </button>
+                  <button onClick={() => setPage('dashboard')} className="btn-secondary flex-1 py-3">
+                    🏠 Home
+                  </button>
+                </div>
+              </>
+            )}
+
+          </div>
+        </div>
+      );
+    }
+
+    // ============================================================
+    // LEADERBOARD PAGE
+    // ============================================================
+
+    function LeaderboardPage({ user }) {
+      const [tab, setTab] = useState('global');
+      const [search, setSearch] = useState('');
+      const lb = loadLeaderboard();
+
+      const filtered = lb.filter(e => e.username.toLowerCase().includes(search.toLowerCase()));
+      const myRank = lb.findIndex(e => e.id === user?.id) + 1;
+
+      const medalColors = ['text-yellow-400', 'text-slate-300', 'text-amber-600'];
+      const medalIcons = ['🥇', '🥈', '🥉'];
+
+      return (
+        <div className="min-h-screen pt-20 pb-12 px-4" style={{ animation: 'fadeIn 0.5s ease-out' }}>
+          <div className="max-w-3xl mx-auto">
+            <div className="text-center mb-8">
+              <h1 className="text-4xl font-display font-bold text-white mb-2">🏆 <span className="gradient-text">Leaderboard</span></h1>
+              <p className="text-slate-400">Compete with players worldwide. Climb the ranks.</p>
+              {user && myRank > 0 && (
+                <div className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-full glass border border-primary/30 text-sm">
+                  <span className="text-slate-400">Your rank:</span>
+                  <span className="font-bold text-primary">#{myRank}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Tabs */}
+            <div className="flex gap-2 glass p-1 rounded-xl mb-6 overflow-x-auto">
+              {['global', 'weekly', 'monthly', 'daily'].map(t => (
+                <button key={t} onClick={() => setTab(t)}
+                  className={`tab-btn capitalize flex-1 min-w-fit whitespace-nowrap ${tab === t ? 'active' : ''}`}>
+                  {t === 'daily' ? '📅 Daily' : t === 'weekly' ? '📆 Weekly' : t === 'monthly' ? '📅 Monthly' : '🌐 Global'}
+                </button>
+              ))}
+            </div>
+
+            {/* Search */}
+            <div className="relative mb-4">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">🔍</span>
+              <input value={search} onChange={e => setSearch(e.target.value)}
+                placeholder="Search player..." className="form-input pl-9" />
+            </div>
+
+            {/* Top 3 podium */}
+            {tab === 'global' && !search && (
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                {[lb[1], lb[0], lb[2]].map((p, i) => {
+                  if (!p) return <div key={i} />;
+                  const order = [1, 0, 2][i];
+                  const sizes = ['h-24', 'h-32', 'h-20'];
+                  const isMe = p.id === user?.id;
+                  return (
+                    <div key={p.id} className={`glass rounded-xl ${sizes[i]} flex flex-col items-center justify-end p-3 text-center border ${isMe ? 'border-primary/50' : 'border-white/5'}`}>
+                      <span className="text-3xl mb-1">{p.avatar}</span>
+                      <p className="text-xs font-semibold text-white truncate w-full text-center">{p.username}</p>
+                      <p className="text-xs text-slate-500">{p.score.toLocaleString()}</p>
+                      <span className="text-xl mt-1">{medalIcons[order]}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Table */}
+            <div className="glass rounded-2xl overflow-hidden">
+              <div className="flex items-center gap-3 px-4 py-3 text-xs text-slate-500 uppercase tracking-wider border-b border-white/5">
+                <span className="w-10 text-center">Rank</span>
+                <span className="flex-1">Player</span>
+                <span className="text-right w-20">Score</span>
+                <span className="text-right w-16 hidden sm:block">Games</span>
+              </div>
+              <div className="divide-y divide-white/5">
+                {filtered.map((p, idx) => {
+                  const isMe = p.id === user?.id;
+                  return (
+                    <div key={p.id}
+                      className={`leaderboard-row ${isMe ? 'my-row' : ''}`}>
+                      <div className="w-10 text-center">
+                        {idx < 3 && !search
+                          ? <span className="text-lg">{medalIcons[idx]}</span>
+                          : <span className={`text-sm font-bold ${isMe ? 'text-primary' : 'text-slate-500'}`}>#{p.rank}</span>}
+                      </div>
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <span className="text-2xl flex-shrink-0">{p.avatar}</span>
+                        <div className="min-w-0">
+                          <p className={`font-semibold text-sm truncate ${isMe ? 'text-primary' : 'text-white'}`}>
+                            {p.username} {isMe && <span className="text-xs text-slate-500">(you)</span>}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right w-20">
+                        <span className="font-bold text-sm text-yellow-400">{p.score.toLocaleString()}</span>
+                      </div>
+                      <div className="text-right w-16 text-slate-500 text-xs hidden sm:block">{p.games} games</div>
+                    </div>
+                  );
+                })}
+                {filtered.length === 0 && (
+                  <div className="text-center py-12 text-slate-500">
+                    <p className="text-3xl mb-2">🔍</p>
+                    <p>No players found for "{search}"</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <p className="text-center text-xs text-slate-600 mt-4">Leaderboard updates after every completed game</p>
+          </div>
+        </div>
+      );
+    }
+
+    // ============================================================
+    // ADMIN DATA PANEL
+    // ============================================================
+
+    function AdminPage({ setPage }) {
+      const [authed, setAuthed] = useState(false);
+      const [creds, setCreds] = useState({ username: '', password: '' });
+      const [authHeader, setAuthHeader] = useState('');
+      const [error, setError] = useState('');
+      const [loading, setLoading] = useState(false);
+      const [users, setUsers] = useState([]);
+      const [games, setGames] = useState({});
+      const [leaderboard, setLeaderboard] = useState([]);
+      const [tab, setTab] = useState('users');
+      const [fetching, setFetching] = useState(false);
+
+      function handleAdminLogin(e) {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+        const token = btoa(`${creds.username}:${creds.password}`);
+
+        // Verify credentials dynamically by trying to query /api/users
+        fetch('http://localhost:8888/api/users', {
+          headers: { 'Authorization': `Basic ${token}` }
+        })
+          .then(async (res) => {
+            if (res.ok) {
+              const data = await res.json();
+              setUsers(data.users || []);
+              setAuthHeader(token);
+              setAuthed(true);
+              // Load the rest of the database records
+              fetchRestData(token);
+            } else {
+              setError('Invalid admin credentials. Access denied.');
+            }
+          })
+          .catch((err) => {
+            console.error(err);
+            setError('Connection to server failed.');
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+      }
+
+      async function fetchRestData(token) {
+        setFetching(true);
+        try {
+          const [gRes, lRes] = await Promise.all([
+            fetch('http://localhost:8888/api/games', { headers: { 'Authorization': `Basic ${token}` } }),
+            fetch('http://localhost:8888/api/leaderboard'),
+          ]);
+          if (gRes.ok) { const d = await gRes.json(); setGames(d.games || {}); }
+          if (lRes.ok) { const d = await lRes.json(); setLeaderboard(d.leaderboard || []); }
+        } catch (err) {
+          console.error('Admin fetch error:', err);
+        }
+        setFetching(false);
+      }
+
+      function handleRefresh() {
+        if (authHeader) {
+          setFetching(true);
+          fetch('http://localhost:8888/api/users', {
+            headers: { 'Authorization': `Basic ${authHeader}` }
+          })
+            .then(async (res) => {
+              if (res.ok) {
+                const data = await res.json();
+                setUsers(data.users || []);
+              }
+            })
+            .catch(console.error);
+          fetchRestData(authHeader);
+        }
+      }
+
+      if (!authed) {
+        return (
+          <div className="min-h-screen flex items-center justify-center pt-16 px-4">
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="orb w-96 h-96 bg-red-500/10 top-1/4 left-1/4" />
+              <div className="orb w-72 h-72 bg-primary/10 bottom-1/4 right-1/4" />
+            </div>
+            <div className="relative w-full max-w-sm" style={{ animation: 'bounceIn 0.5s ease-out' }}>
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center text-2xl mx-auto mb-4 shadow-glow-error">🔐</div>
+                <h1 className="text-2xl font-display font-bold text-white">Admin Access</h1>
+                <p className="text-slate-500 text-sm mt-1">Restricted area — authorized personnel only</p>
+              </div>
+              <div className="glass rounded-2xl p-7 shadow-glass">
+                <form onSubmit={handleAdminLogin} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Username</label>
+                    <input type="text" placeholder="Admin username"
+                      value={creds.username} onChange={e => setCreds({ ...creds, username: e.target.value })}
+                      className="form-input" autoComplete="off" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Password</label>
+                    <input type="password" placeholder="••••••••"
+                      value={creds.password} onChange={e => setCreds({ ...creds, password: e.target.value })}
+                      className="form-input" />
+                  </div>
+                  {error && (
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-red-900/30 border border-red-500/30 text-red-300 text-sm">
+                      <span>🚫</span><span>{error}</span>
+                    </div>
+                  )}
+                  <button type="submit" className="btn-primary w-full py-3 rounded-xl" style={{ background: 'linear-gradient(135deg, #DC2626, #B91C1C)' }}>
+                    🔓 Authenticate
+                  </button>
+                </form>
+                <button onClick={() => setPage('landing')} className="btn-ghost w-full mt-3 text-sm">← Back to Home</button>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      const totalGames = Object.values(games).reduce((acc, g) => acc + g.length, 0);
+
+      return (
+        <div className="min-h-screen pt-20 pb-12 px-4" style={{ animation: 'fadeIn 0.4s ease-out' }}>
+          <div className="max-w-6xl mx-auto space-y-6">
+
+            {/* Admin Header */}
+            <div className="glass rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center text-2xl shadow-glow-error">🔐</div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-xl font-display font-bold text-white">Admin Data Panel</h1>
+                    <span className="admin-badge">restricted</span>
+                  </div>
+                  <p className="text-slate-500 text-sm">Logged in as <span className="text-red-400 font-semibold">{creds.username}</span> · Read-only access</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <button onClick={handleRefresh} disabled={fetching}
+                  className="btn-secondary flex items-center gap-2 text-sm py-2">
+                  {fetching ? <span className="animate-spin">⟳</span> : '🔄'} Refresh
+                </button>
+                <button onClick={() => setPage('landing')} className="btn-ghost text-sm">← Exit</button>
+              </div>
+            </div>
+
+            {/* Stats Overview */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                { label: 'Total Users', val: users.length, icon: '👥', color: 'text-blue-400' },
+                { label: 'Total Games', val: totalGames, icon: '🎮', color: 'text-green-400' },
+                { label: 'Leaderboard Size', val: leaderboard.length, icon: '🏆', color: 'text-yellow-400' },
+                { label: 'Active Today', val: users.filter(u => u.lastLoginAt && new Date(u.lastLoginAt) > new Date(Date.now() - 86400000)).length, icon: '⚡', color: 'text-purple-400' },
+              ].map(s => (
+                <div key={s.label} className="stat-card">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-slate-500 text-xs uppercase tracking-wider">{s.label}</span>
+                    <span className="text-xl">{s.icon}</span>
+                  </div>
+                  <p className={`text-3xl font-display font-bold ${s.color}`}>{s.val}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Tabs */}
+            <div className="flex gap-2 bg-slate-800/50 rounded-xl p-1 w-fit">
+              {[['users', '👥 Users'], ['games', '🎮 Games'], ['leaderboard', '🏆 Rankings']].map(([t, label]) => (
+                <button key={t} onClick={() => setTab(t)}
+                  className={`tab-btn text-sm px-5 ${tab === t ? 'active' : ''}`}>
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Users Table */}
+            {tab === 'users' && (
+              <div className="glass rounded-2xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+                  <h2 className="font-display font-bold text-white flex items-center gap-2">👥 Registered Users <span className="text-xs text-slate-500 font-normal">({users.length} total)</span></h2>
+                </div>
+                <div className="admin-scroll">
+                  {fetching ? (
+                    <div className="text-center py-12 text-slate-400">
+                      <span className="text-3xl animate-spin inline-block">⟳</span>
+                      <p className="mt-2 text-sm">Loading data...</p>
+                    </div>
+                  ) : users.length === 0 ? (
+                    <div className="text-center py-12">
+                      <p className="text-4xl mb-2">📭</p>
+                      <p className="text-slate-500 text-sm">No users registered yet</p>
+                    </div>
+                  ) : (
+                    <table className="admin-table">
+                      <thead><tr>
+                        <th>#</th><th>Avatar</th><th>Username</th><th>Email</th><th>Level</th><th>Rank</th><th>XP</th><th>Games</th><th>Score</th><th>Streak</th><th>Joined</th>
+                      </tr></thead>
+                      <tbody>
+                        {users.map((u, i) => (
+                          <tr key={u.id}>
+                            <td className="text-slate-600">{i + 1}</td>
+                            <td><span className="text-xl">{u.avatar || '🧩'}</span></td>
+                            <td><span className="font-semibold text-white">{u.username}</span></td>
+                            <td className="text-slate-400">{u.email}</td>
+                            <td><span className="font-bold text-blue-400">Lv.{u.level}</span></td>
+                            <td><span className="text-xs font-semibold text-purple-300">{u.rank}</span></td>
+                            <td className="text-yellow-400 font-semibold">{u.xp?.toLocaleString()}</td>
+                            <td className="text-slate-300">{u.gamesPlayed || 0}</td>
+                            <td className="text-green-400 font-semibold">{u.totalScore?.toLocaleString() || 0}</td>
+                            <td className="text-orange-400">{u.streak || 0}🔥</td>
+                            <td className="text-slate-500">{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Games Table */}
+            {tab === 'games' && (
+              <div className="glass rounded-2xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-white/5">
+                  <h2 className="font-display font-bold text-white flex items-center gap-2">🎮 Game Records <span className="text-xs text-slate-500 font-normal">({totalGames} total)</span></h2>
+                </div>
+                <div className="admin-scroll">
+                  {fetching ? (
+                    <div className="text-center py-12 text-slate-400"><span className="text-3xl animate-spin inline-block">⟳</span><p className="mt-2 text-sm">Loading...</p></div>
+                  ) : totalGames === 0 ? (
+                    <div className="text-center py-12"><p className="text-4xl mb-2">🎮</p><p className="text-slate-500 text-sm">No games recorded yet</p></div>
+                  ) : (
+                    <table className="admin-table">
+                      <thead><tr><th>User ID</th><th>Difficulty</th><th>Status</th><th>Score</th><th>Time</th><th>Mistakes</th><th>Hints</th><th>Saved At</th></tr></thead>
+                      <tbody>
+                        {Object.entries(games).flatMap(([uid, glist]) =>
+                          (glist || []).map((g, i) => (
+                            <tr key={`${uid}-${i}`}>
+                              <td className="font-mono text-xs text-slate-500">{uid.slice(0, 8)}…</td>
+                              <td><span className={`text-xs font-bold ${DIFFICULTY_CONFIG[g.difficulty]?.color || 'text-slate-300'}`}>{g.difficulty}</span></td>
+                              <td><span className={`text-xs font-semibold ${g.won ? 'text-green-400' : g.status === 'in_progress' ? 'text-yellow-400' : 'text-red-400'}`}>{g.won ? '✓ Won' : g.status === 'in_progress' ? '⏳ In Progress' : '✗ Lost'}</span></td>
+                              <td className="text-yellow-400 font-semibold">{g.score?.toLocaleString() || '—'}</td>
+                              <td className="text-slate-300">{g.timeElapsed ? `${Math.floor(g.timeElapsed / 60)}:${String(g.timeElapsed % 60).padStart(2, '0')}` : '—'}</td>
+                              <td className={`font-semibold ${g.mistakesCount > 0 ? 'text-red-400' : 'text-slate-500'}`}>{g.mistakesCount || 0}</td>
+                              <td className="text-slate-400">{g.hintsUsed || 0}</td>
+                              <td className="text-slate-500 text-xs">{g.savedAt ? new Date(g.savedAt).toLocaleDateString() : '—'}</td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Leaderboard Table */}
+            {tab === 'leaderboard' && (
+              <div className="glass rounded-2xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-white/5">
+                  <h2 className="font-display font-bold text-white flex items-center gap-2">🏆 Leaderboard <span className="text-xs text-slate-500 font-normal">({leaderboard.length} entries)</span></h2>
+                </div>
+                <div className="admin-scroll">
+                  {fetching ? (
+                    <div className="text-center py-12 text-slate-400"><span className="text-3xl animate-spin inline-block">⟳</span><p className="mt-2 text-sm">Loading...</p></div>
+                  ) : leaderboard.length === 0 ? (
+                    <div className="text-center py-12"><p className="text-4xl mb-2">🏆</p><p className="text-slate-500 text-sm">Leaderboard is empty</p></div>
+                  ) : (
+                    <table className="admin-table">
+                      <thead><tr><th>Rank</th><th>Avatar</th><th>Username</th><th>Score</th><th>Games</th></tr></thead>
+                      <tbody>
+                        {leaderboard.map((e, i) => (
+                          <tr key={e.id || i}>
+                            <td><span className="font-bold text-yellow-400">#{e.rank}</span></td>
+                            <td><span className="text-xl">{e.avatar || '🧩'}</span></td>
+                            <td className="font-semibold text-white">{e.username}</td>
+                            <td className="text-yellow-400 font-bold">{e.score?.toLocaleString()}</td>
+                            <td className="text-slate-400">{e.games}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <p className="text-center text-xs text-slate-600">Admin panel — read-only view. Data stored in <code className="text-slate-500">data/*.json</code> · Secured with Basic Auth</p>
+          </div>
+        </div>
+      );
+    }
+
+    // ============================================================
+    // DAILY CHALLENGE PAGE
+    // ============================================================
+
+    function DailyChallengePage({ user, setPage, setSelectedDifficulty }) {
+      const [timeLeft, setTimeLeft] = useState(() => {
+        const now = new Date();
+        const midnight = new Date(now); midnight.setHours(24, 0, 0, 0);
+        return Math.floor((midnight - now) / 1000);
+      });
+
+      useEffect(() => {
+        const timer = setInterval(() => setTimeLeft(t => Math.max(t - 1, 0)), 1000);
+        return () => clearInterval(timer);
+      }, []);
+
+      const h = Math.floor(timeLeft / 3600);
+      const m = Math.floor((timeLeft % 3600) / 60);
+      const s = timeLeft % 60;
+
+      const today = new Date();
+      const dateStr = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+      const lb = loadLeaderboard();
+
+      return (
+        <div className="min-h-screen pt-20 pb-12 px-4" style={{ animation: 'fadeIn 0.5s ease-out' }}>
+          <div className="max-w-4xl mx-auto space-y-8">
+
+            {/* Header */}
+            <div className="glass rounded-2xl p-8 text-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-yellow-900/20 to-orange-900/10" />
+              <div className="relative">
+                <div className="text-5xl mb-3">📅</div>
+                <h1 className="text-4xl font-display font-black text-white mb-2">Daily Challenge</h1>
+                <p className="text-yellow-400 font-medium mb-4">{dateStr}</p>
+                <p className="text-slate-400 text-sm max-w-lg mx-auto mb-6">
+                  One global puzzle. Every player. Same board. Compete for the top spot on today's leaderboard.
+                </p>
+                <div className="flex items-center justify-center gap-3 mb-6">
+                  {[{ val: h, lbl: 'hours' }, { val: m, lbl: 'minutes' }, { val: s, lbl: 'seconds' }].map((t, i) => (
+                    <React.Fragment key={t.lbl}>
+                      {i > 0 && <span className="text-slate-600 font-bold text-2xl">:</span>}
+                      <div className="glass-light rounded-xl px-4 py-3 text-center min-w-[60px]">
+                        <p className="text-2xl font-display font-bold text-white">{t.val.toString().padStart(2, '0')}</p>
+                        <p className="text-xs text-slate-500">{t.lbl}</p>
+                      </div>
+                    </React.Fragment>
+                  ))}
+                </div>
+                <p className="text-slate-500 text-xs mb-4">New puzzle resets in ↑</p>
+                {user ? (
+                  <button onClick={() => { setSelectedDifficulty('Hard'); setPage('game'); }}
+                    className="btn-primary text-lg py-3 px-10 rounded-xl shadow-glow-primary">
+                    🎯 Start Today's Challenge
+                  </button>
+                ) : (
+                  <div>
+                    <p className="text-slate-400 text-sm mb-3">Sign in to track your score on the daily leaderboard.</p>
+                    <button onClick={() => setPage('register')} className="btn-primary py-3 px-8">
+                      Create Free Account
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Today's stats */}
+            <div className="grid sm:grid-cols-3 gap-4">
+              {[
+                { label: "Today's Players", val: '3,241', icon: '👥' },
+                { label: 'Completion Rate', val: '67%', icon: '✅' },
+                { label: 'Avg Completion Time', val: '22:14', icon: '⏱️' },
+              ].map(s => (
+                <div key={s.label} className="stat-card text-center">
+                  <p className="text-3xl mb-2">{s.icon}</p>
+                  <p className="text-2xl font-display font-bold gradient-text">{s.val}</p>
+                  <p className="text-slate-500 text-sm mt-1">{s.label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Daily leaderboard */}
+            <div className="glass rounded-2xl p-6">
+              <h2 className="font-display font-bold text-white text-xl mb-4">📊 Today's Top Players</h2>
+              <div className="space-y-2">
+                {lb.slice(0, 5).map((p, i) => {
+                  const isMe = p.id === user?.id;
+                  const medals = ['🥇', '🥈', '🥉'];
+                  return (
+                    <div key={p.id} className={`leaderboard-row ${isMe ? 'my-row' : ''}`}>
+                      <div className="w-8 text-center text-lg">{medals[i] || `#${i + 1}`}</div>
+                      <span className="text-2xl">{p.avatar}</span>
+                      <span className={`flex-1 font-semibold text-sm ${isMe ? 'text-primary' : 'text-white'}`}>{p.username}</span>
+                      <span className="font-bold text-yellow-400 text-sm">{Math.floor(p.score / 10).toLocaleString()}</span>
+                      <span className="text-slate-500 text-xs">pts</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Info cards */}
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="glass rounded-2xl p-5">
+                <h3 className="font-semibold text-white mb-3">📜 Today's Rules</h3>
+                <ul className="space-y-2 text-sm text-slate-400">
+                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">•</span>Hard difficulty — no changes</li>
+                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">•</span>Score based on time + mistakes + hints</li>
+                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">•</span>Submit only once — choose wisely!</li>
+                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">•</span>Rankings update immediately</li>
+                </ul>
+              </div>
+              <div className="glass rounded-2xl p-5">
+                <h3 className="font-semibold text-white mb-3">🔥 Your Streak</h3>
+                {user ? (
+                  <div className="text-center py-2">
+                    <p className="text-4xl font-display font-bold text-orange-400">{user.streak}</p>
+                    <p className="text-slate-400 text-sm">day streak</p>
+                    <p className="text-xs text-slate-500 mt-2">Best: {user.maxStreak || 0} days</p>
+                    <div className="flex justify-center gap-1 mt-3 flex-wrap">
+                      {Array.from({ length: 7 }).map((_, i) => {
+                        const d = new Date();
+                        d.setDate(d.getDate() - (6 - i));
+                        const ds = d.toDateString();
+                        const active = user.streakDays?.includes(ds);
+                        return <div key={i} className={`streak-day ${active ? 'bg-orange-400' : 'bg-bg-elevated'}`} />;
+                      })}
+                    </div>
+                    <p className="text-xs text-slate-600 mt-1">Last 7 days</p>
+                  </div>
+                ) : (
+                  <p className="text-slate-500 text-sm">Sign in to track your streak.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ============================================================
+    // MAIN APP
+    // ============================================================
+
+    function App() {
+      const [page, setPage] = useState('landing');
+      const [user, setUser] = useState(() => loadUser());
+      const [toasts, setToasts] = useState([]);
+      // Campaign state: phase = starting difficulty, round = 0-9 index
+      const [campaign, setCampaign] = useState({ phase: 'Easy', round: 0 });
+
+      // Derive current round config from campaign
+      const campaignRounds = CAMPAIGN_CONFIG[campaign.phase] || CAMPAIGN_CONFIG['Easy'];
+      const currentRoundInfo = campaignRounds[campaign.round] || campaignRounds[0];
+      const selectedDifficulty = currentRoundInfo.diff;
+      const isBoss = currentRoundInfo.boss;
+
+      // Force logout on app mount/re-entry
+      useEffect(() => {
+        saveUser(null);
+        setUser(null);
+      }, []);
+
+      // Persist user
+      useEffect(() => { saveUser(user); }, [user]);
+
+      function addToast(message, type = 'info') {
+        const id = Date.now() + Math.random();
+        setToasts(t => [...t, { id, message, type }]);
+        setTimeout(() => removeToast(id), 4000);
+      }
+      function removeToast(id) {
+        setToasts(t => t.filter(toast => toast.id !== id));
+      }
+
+      function handleLogin(u) {
+        setUser(u);
+        setPage('dashboard');
+      }
+      function handleLogout() {
+        setUser(null);
+        saveUser(null);
+        setPage('landing');
+        addToast('Logged out successfully', 'info');
+      }
+
+      // Route guard
+      const protectedPages = ['dashboard', 'game', 'results'];
+      useEffect(() => {
+        if (protectedPages.includes(page) && !user) setPage('login');
+      }, [page, user]);
+
+      const commonProps = { setPage, user, setUser, addToast, campaign, setCampaign };
+
+      return (
+        <>
+          <Navbar page={page} setPage={setPage} user={user} onLogout={handleLogout} />
+          <main>
+            {page === 'landing' && <LandingPage      {...commonProps} />}
+            {page === 'login' && <LoginPage        {...commonProps} onLogin={handleLogin} />}
+            {page === 'register' && <RegisterPage     {...commonProps} onLogin={handleLogin} />}
+            {page === 'dashboard' && user && <DashboardPage   {...commonProps} />}
+            {page === 'difficulty' && <DifficultyPage   {...commonProps} />}
+            {page === 'game' && user && <GamePage
+              difficulty={selectedDifficulty}
+              isBoss={isBoss}
+              campaignPhase={campaign.phase}
+              campaignRound={campaign.round}
+              campaignTotal={campaignRounds.length}
+              {...commonProps} />}
+            {page === 'daily' && <DailyChallengePage {...commonProps} />}
+            {page === 'results' && user && <ResultsPage  {...commonProps} />}
+            {page === 'leaderboard' && <LeaderboardPage  {...commonProps} />}
+            {page === 'admin' && <AdminPage setPage={setPage} />}
+          </main>
+          <Toast toasts={toasts} removeToast={removeToast} />
+        </>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+
+</html>
