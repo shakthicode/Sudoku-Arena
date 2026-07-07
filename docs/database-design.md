@@ -43,6 +43,8 @@ Stores all registered user accounts as a flat object keyed by UUID.
 | `achievements` | string[] | List of unlocked achievement IDs |
 | `recentGames` | object[] | Last 10 game summaries |
 | `streakDays` | string[] | ISO date strings of active streak days |
+| `campaignProgress` | object | Map of difficulty/phase to completed rounds |
+| `resumeProgress` | object \| null | Saved state for resuming the current game session |
 | `createdAt` | ISO datetime | Account creation timestamp |
 | `updatedAt` | ISO datetime | Last profile update timestamp |
 | `lastLoginAt` | ISO datetime | Most recent successful login |
@@ -71,6 +73,15 @@ Stores all registered user accounts as a flat object keyed by UUID.
     "achievements": ["first_victory", "speed_runner", "perfectionist"],
     "recentGames": [],
     "streakDays": ["2025-07-01", "2025-07-02"],
+    "campaignProgress": {
+      "Easy": 3
+    },
+    "resumeProgress": {
+      "difficulty": "Easy",
+      "campaignPhase": "Easy",
+      "campaignRound": 2,
+      "isBoss": false
+    },
     "createdAt": "2025-06-01T10:00:00Z",
     "updatedAt": "2025-07-05T12:00:00Z",
     "lastLoginAt": "2025-07-05T11:55:00Z"

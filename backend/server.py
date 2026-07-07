@@ -9,9 +9,11 @@ Security:
   - Passwords stored as bcrypt hashes (SHA-256 migrated on login)
   - All mutating endpoints require Bearer token authorization
   - Admin endpoints require HTTP Basic Authentication
+  - User IDs validated as UUID v4 before any filesystem path is constructed
 """
 
 import json
+import re
 import os
 import hashlib
 import uuid
@@ -44,7 +46,7 @@ if sys.stdout.encoding != 'utf-8':
 
 # ── Environment-based configuration (no hardcoded secrets) ────────────────────
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "change_me")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "change_me_in_production")
 PORT           = int(os.environ.get("PORT", 8888))
 
 # ── File paths ─────────────────────────────────────────────────────────────────
@@ -129,6 +131,13 @@ def read_all_games():
                 games[uid] = read_user_games(uid)
     return games
 
+
+def sanitize_user_data(user_data):
+    """Return a safe user payload suitable for API responses."""
+    if not isinstance(user_data, dict):
+        return {}
+    return {k: v for k, v in user_data.items() if k != "password_hash"}
+
 # ── Migration of legacy monolithic database files ─────────────────────────────
 def migrate_legacy_db():
     users_file = os.path.join(DATA_DIR, "users.json")
@@ -159,6 +168,20 @@ def migrate_legacy_db():
             print(f"  [WARN] Could not rename games.json: {e}")
 
 migrate_legacy_db()
+
+# ── UUID validation ───────────────────────────────────────────────────────────
+_UUID_RE = re.compile(
+    r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+    re.IGNORECASE
+)
+
+def is_valid_uuid(val):
+    """Return True only if val is a canonical UUID string (8-4-4-4-12 hex).
+    This prevents path-traversal attacks where an attacker could craft a
+    user_id like '../../../etc/passwd' to escape the database directory.
+    """
+    return bool(val and isinstance(val, str) and _UUID_RE.match(val))
+
 
 # ── Password hashing helpers ───────────────────────────────────────────────────
 
@@ -243,11 +266,14 @@ class SudokuHandler(BaseHTTPRequestHandler):
             return False
 
     def send_basic_auth_challenge(self):
-        """Respond with 401 and a Basic Auth challenge header."""
+        """Respond with 401 without a WWW-Authenticate challenge header.
+        Omitting WWW-Authenticate prevents the browser from showing its own
+        native credential popup; the React admin login form handles the error.
+        """
         self.send_response(401)
-        self.send_header("WWW-Authenticate", 'Basic realm="Sudoko-Arena Admin"')
         self.send_header("Content-Type", "application/json")
         self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
         self.end_headers()
         self.wfile.write(json.dumps({"error": "Unauthorized — admin access required"}).encode("utf-8"))
 
@@ -276,8 +302,7 @@ class SudokuHandler(BaseHTTPRequestHandler):
                 return
             users = read_all_users()
             # Strip password hashes from response
-            safe = [{k: v for k, v in u.items() if k != "password_hash"}
-                    for u in users.values()]
+            safe = [sanitize_user_data(u) for u in users.values()]
             self.send_json(200, {"users": safe, "total": len(safe)})
             return
 
@@ -296,9 +321,37 @@ class SudokuHandler(BaseHTTPRequestHandler):
                     self.send_basic_auth_challenge()
                     return
             if uid:
+                if not is_valid_uuid(uid):
+                    self.send_json(400, {"error": "Invalid userId format"})
+                    return
                 self.send_json(200, {"games": read_user_games(uid)})
             else:
                 self.send_json(200, {"games": read_all_games()})
+            return
+
+        # GET /api/progress → protected per-user progress endpoint
+        if path == "/api/progress":
+            qs = parse_qs(parsed.query)
+            uid = qs.get("userId", [None])[0]
+            if not uid:
+                self.send_json(400, {"error": "userId required"})
+                return
+            if not is_valid_uuid(uid):
+                self.send_json(400, {"error": "Invalid userId format"})
+                return
+            auth = self.headers.get("Authorization", "")
+            if not auth.startswith("Bearer "):
+                self.send_json(401, {"error": "Unauthorized access"})
+                return
+            req_token = auth[7:]
+            user_data = read_user(uid)
+            if not user_data or user_data.get("token") != req_token:
+                self.send_json(401, {"error": "Unauthorized access"})
+                return
+            self.send_json(200, {"progress": {
+                "campaignProgress": user_data.get("campaignProgress", {}),
+                "resumeProgress": user_data.get("resumeProgress", None),
+            }})
             return
 
         self.send_json(404, {"error": "Endpoint not found", "path": path})
@@ -357,13 +410,15 @@ class SudokuHandler(BaseHTTPRequestHandler):
                 "achievements":  [],
                 "recentGames":   [],
                 "streakDays":    [],
+                "campaignProgress": {},
+                "resumeProgress": None,
                 "createdAt":     datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
                 "updatedAt":     datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
             }
             write_user(user_id, new_user)
             print(f"  ✅  New user registered: {username} ({email})")
 
-            safe_user = {k: v for k, v in new_user.items() if k != "password_hash"}
+            safe_user = sanitize_user_data(new_user)
             self.send_json(201, {"message": "Account created successfully", "user": safe_user})
             return
 
@@ -399,12 +454,15 @@ class SudokuHandler(BaseHTTPRequestHandler):
             write_user(found["id"], found)
             print(f"  🔐  User logged in: {found['username']}")
 
-            safe_user = {k: v for k, v in found.items() if k != "password_hash"}
+            safe_user = sanitize_user_data(found)
             self.send_json(200, {"message": "Login successful", "user": safe_user})
             return
 
-        # ── Bearer token authorization helper ────────────────────────────
+        # ── Bearer token authorization helper (UUID-validated) ─────────────────
         def is_authorized(user_id):
+            """Validate UUID format first, then check Bearer token."""
+            if not is_valid_uuid(user_id):
+                return False
             auth = self.headers.get("Authorization", "")
             if not auth.startswith("Bearer "):
                 return False
@@ -417,6 +475,9 @@ class SudokuHandler(BaseHTTPRequestHandler):
             user_id = body.get("id")
             if not user_id:
                 self.send_json(400, {"error": "User ID required"})
+                return
+            if not is_valid_uuid(user_id):
+                self.send_json(400, {"error": "Invalid user ID format"})
                 return
             if not is_authorized(user_id):
                 self.send_json(401, {"error": "Unauthorized access"})
@@ -435,7 +496,7 @@ class SudokuHandler(BaseHTTPRequestHandler):
             user_data["updatedAt"] = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
             write_user(user_id, user_data)
 
-            safe_user = {k: v for k, v in user_data.items() if k != "password_hash"}
+            safe_user = sanitize_user_data(user_data)
             self.send_json(200, {"message": "User updated", "user": safe_user})
             return
 
@@ -444,6 +505,9 @@ class SudokuHandler(BaseHTTPRequestHandler):
             user_id = body.get("userId")
             if not user_id:
                 self.send_json(400, {"error": "userId required"})
+                return
+            if not is_valid_uuid(user_id):
+                self.send_json(400, {"error": "Invalid userId format"})
                 return
             if not is_authorized(user_id):
                 self.send_json(401, {"error": "Unauthorized access"})
@@ -479,12 +543,48 @@ class SudokuHandler(BaseHTTPRequestHandler):
             self.send_json(200, {"message": "Game saved", "gameId": game_entry["id"]})
             return
 
+        # ── POST /api/progress/save ─────────────────────────────────────
+        if path == "/api/progress/save":
+            user_id = body.get("userId")
+            if not user_id:
+                self.send_json(400, {"error": "userId required"})
+                return
+            if not is_valid_uuid(user_id):
+                self.send_json(400, {"error": "Invalid userId format"})
+                return
+            auth = self.headers.get("Authorization", "")
+            if not auth.startswith("Bearer "):
+                self.send_json(401, {"error": "Unauthorized access"})
+                return
+            req_token = auth[7:]
+            user_data = read_user(user_id)
+            if not user_data or user_data.get("token") != req_token:
+                self.send_json(401, {"error": "Unauthorized access"})
+                return
+
+            if isinstance(body.get("campaignProgress"), dict):
+                user_data["campaignProgress"] = body["campaignProgress"]
+            if body.get("resumeProgress") is not None:
+                user_data["resumeProgress"] = body["resumeProgress"]
+            elif "resumeProgress" in body:
+                user_data["resumeProgress"] = None
+            user_data["updatedAt"] = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
+            write_user(user_id, user_data)
+            self.send_json(200, {"message": "Progress saved", "progress": {
+                "campaignProgress": user_data.get("campaignProgress", {}),
+                "resumeProgress": user_data.get("resumeProgress", None),
+            }})
+            return
+
         # ── POST /api/leaderboard/update ────────────────────────────────
         if path == "/api/leaderboard/update":
             entry   = body
             user_id = entry.get("id")
             if not user_id:
                 self.send_json(400, {"error": "User ID required"})
+                return
+            if not is_valid_uuid(user_id):
+                self.send_json(400, {"error": "Invalid user ID format"})
                 return
             if not is_authorized(user_id):
                 self.send_json(401, {"error": "Unauthorized access"})
@@ -516,13 +616,23 @@ class SudokuHandler(BaseHTTPRequestHandler):
 
 # ── Entry Point ────────────────────────────────────────────────────────────────
 def main():
-    server = HTTPServer(("localhost", PORT), SudokuHandler)
+    # Bind to 127.0.0.1 for maximum robustness (avoiding IPv6 dual-stack resolution bugs on Windows)
+    server = HTTPServer(("127.0.0.1", PORT), SudokuHandler)
+
+    # Write PID file to logs/server.pid
+    pid_file = os.path.join(ROOT_DIR, "logs", "server.pid")
+    try:
+        os.makedirs(os.path.dirname(pid_file), exist_ok=True)
+        with open(pid_file, "w", encoding="utf-8") as f:
+            f.write(str(os.getpid()))
+    except Exception as e:
+        print(f"  [WARN] Could not write PID file: {e}")
 
     print()
     print("  +================================================+")
     print("  |          Sudoko-Arena Local Server             |")
     print("  +================================================+")
-    print(f"  |  URL  : http://localhost:{PORT}                    |")
+    print(f"  |  URL  : http://127.0.0.1:{PORT}                    |")
     print(f"  |  Admin: ADMIN_USERNAME from .env               |")
     print(f"  |  Data : database/                              |")
     print(f"  |  Users: database/users/                        |")
@@ -537,6 +647,12 @@ def main():
     except KeyboardInterrupt:
         print("\n  Server stopped.")
         server.shutdown()
+    finally:
+        if os.path.exists(pid_file):
+            try:
+                os.remove(pid_file)
+            except Exception:
+                pass
 
 if __name__ == "__main__":
     main()

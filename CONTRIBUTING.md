@@ -38,7 +38,7 @@ Thank you for your interest in contributing! Here's how to get started.
    python backend/server.py
    ```
 
-5. Open [http://localhost:8888](http://localhost:8888) in your browser.
+5. Open [http://127.0.0.1:8888](http://127.0.0.1:8888) in your browser.
 
 ---
 

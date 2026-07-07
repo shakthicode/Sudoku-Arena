@@ -1,6 +1,6 @@
 # 🧩 Sudoko-Arena
 
-> **The most advanced competitive Sudoku platform** — algorithmically generated puzzles, AI-powered Smart Hints, daily global challenges, XP progression, achievements, campaign mode, and a secure REST API backend. Built as a professional end-to-end full-stack portfolio project.
+> A polished local-first Sudoku experience with a Python backend, a single-page frontend, persistent user progress, daily challenges, and a lightweight leaderboard system.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-brightgreen?logo=python)](https://python.org)
@@ -11,256 +11,207 @@
 
 ---
 
-## 📸 Screenshots
+## 📸 Current Screenshots
 
-| 🏠 Landing Page | 📊 User Dashboard | 🎮 Live Gameplay |
-| :---: | :---: | :---: |
-| ![Home](screenshots/home.png) | ![Dashboard](screenshots/dashboard.png) | ![Board](screenshots/board.png) |
+The repository already includes a set of screenshot assets in [screenshots](screenshots). The current files are:
 
-| 🏆 Leaderboard | 🛡️ Admin Panel | 🎯 Game Results |
-| :---: | :---: | :---: |
-| ![Leaderboard](screenshots/leaderboard.png) | ![Admin Panel](screenshots/admin.png) | ![Results](screenshots/results.png) |
-
-| 📅 Daily Challenge | 🔐 Authentication |
-| :---: | :---: |
-| ![Daily Challenge](screenshots/DailyChallenge.png) | ![Login](screenshots/login.png) |
+- [screenshots/Admin login page.png](screenshots/Admin%20login%20page.png)
+- [screenshots/Admin panel.png](screenshots/Admin%20panel.png)
+- [screenshots/Campaign.png](screenshots/Campaign.png)
+- [screenshots/Daily Challenge.png](screenshots/Daily%20Challenge.png)
+- [screenshots/Dashboard.png](screenshots/Dashboard.png)
+- [screenshots/Game.png](screenshots/Game.png)
+- [screenshots/Leaderboard.png](screenshots/Leaderboard.png)
+- [screenshots/Login.png](screenshots/Login.png)
+- [screenshots/profile.png](screenshots/profile.png)
+- [screenshots/Result.png](screenshots/Result.png)
 
 ---
 
-## ✨ Features
+## ✨ What is in this repo
 
-| Feature | Description |
-|---------|-------------|
-| 🧩 **Backtracking Puzzle Generator** | Unique, algorithm-generated puzzles with single-solution guarantee across 5 difficulties |
-| 🤖 **AI Smart Hints** | Context-aware logical explanations (row/col/box elimination, naked singles) for every move |
-| 📅 **Seeded Daily Challenges** | Deterministic daily puzzles shared globally using `mulberry32` PRNG seeded by date |
-| 📈 **XP & Level Progression** | Earn XP per win; progress through 7 ranks from Novice to Grandmaster |
-| 🏆 **Global Leaderboard** | Real-time ranking updates persisted to `database/leaderboard.json` after every win |
-| 🎖️ **15 Unique Achievements** | Unlock badges for speed, perfectionism, streaks, and difficulty milestones |
-| 🔥 **Daily Streak Tracker** | Calendar heatmap tracking consecutive login days; breaks on missed days |
-| 🎮 **Campaign Mode** | 10-round progression per difficulty with escalating bosses and level transitions |
-| ♟️ **Notes Mode** | Candidate notation support (pencil marks) in a 3×3 sub-grid inside each cell |
-| 🔄 **Undo System** | Unlimited move history with full board-state rollback |
-| 🔒 **bcrypt Authentication** | Cryptographic password hashing with SHA-256 legacy migration on first login |
-| 🛡️ **Admin Dashboard** | HTTP Basic Auth–protected panel for user management and data inspection |
-| 📱 **Responsive Design** | Mobile-optimized layout with touch-target sizing and adaptive grid scaling |
-| 🌙 **Dark Mode UI** | Premium glassmorphism dark theme with animated gradient orbs and particle effects |
+- A single-page game experience in [frontend/index.html](frontend/index.html)
+- A lightweight Python API in [backend/server.py](backend/server.py)
+- Per-user JSON persistence under [database](database)
+- Automated tests in [tests/test_server.py](tests/test_server.py)
+- A Windows launcher in [run.bat](run.bat)
+
+### Core features
+
+- Unique Sudoku puzzle generation with a backtracking solver
+- Smart hints with move explanations
+- Daily challenge mode
+- Campaign progression with boss rounds
+- Notes mode, undo/redo, and restart flow
+- XP, achievements, streak tracking, and leaderboard updates
+- User auth with bcrypt and admin access via HTTP Basic Auth
+- Resume progress saving for signed-in users
+- Responsive glassmorphism UI for desktop and mobile
 
 ---
 
 ## 🛠️ Tech Stack
 
 ### Frontend
-| Technology | Purpose |
-|-----------|---------|
-| **React 18** (CDN, production build) | Component rendering and reactive state via hooks |
-| **TailwindCSS v3** (CDN) | Utility-first responsive design system |
-| **Babel Standalone** | In-browser JSX transpilation |
-| **Space Grotesk & Inter** (Google Fonts) | Premium display and body typography |
-| Custom CSS + Animations | Glassmorphism cards, gradient orbs, keyframe animations |
+
+- React 18 via CDN
+- Tailwind CSS via CDN
+- Babel Standalone for JSX in the browser
+- Custom CSS and animation layers for the game UI
 
 ### Backend
-| Technology | Purpose |
-|-----------|---------|
-| **Python 3 `http.server`** | Custom REST API extending `BaseHTTPRequestHandler` |
-| **`bcrypt`** | Industry-standard cryptographic password hashing |
-| **`python-dotenv`** | Environment variable loading from `.env` |
-| **`threading.Lock`** | Thread-safe mutexes preventing JSON write race conditions |
-| **`uuid`** | Secure random session token generation |
+
+- Python 3 with the standard library HTTP server
+- bcrypt for password hashing
+- python-dotenv for environment loading
+- UUID-based session tokens and JSON persistence
 
 ### Storage
-| Storage | Description |
-|---------|-------------|
-| `database/users/` | Per-user JSON profile files (`{uuid}.json`) |
-| `database/games/` | Per-user game history JSON arrays |
-| `database/leaderboard.json` | Global ranked leaderboard snapshot |
+
+- [database/users](database/users) for per-user profile data
+- [database/games](database/games) for saved game history
+- [database/leaderboard.json](database/leaderboard.json) for leaderboard snapshots
 
 ---
 
 ## 🏗️ Architecture
 
-```
-┌──────────────────────────────────────┐
-│        React SPA (frontend/)         │  ← index.html served by Python server
-│  React 18 + TailwindCSS + Babel JSX  │
-└──────────────┬───────────────────────┘
-               │  HTTP REST API calls
-               ▼
-┌──────────────────────────────────────┐
-│   Python HTTP Server (backend/)      │  ← server.py (port 8888)
-│   BaseHTTPRequestHandler + Lock      │
-└──────────┬───────────────────────────┘
-           │  Thread-safe JSON I/O
-           ▼
-┌──────────────────────────────────────┐
-│   Local JSON Database (database/)    │
-│  users/ · games/ · leaderboard.json  │
-└──────────────────────────────────────┘
+```text
+Browser UI (frontend/index.html)
+        │
+        ▼
+Python HTTP API (backend/server.py)
+        │
+        ▼
+Local JSON storage (database/)
 ```
 
-### Auth Flow
-```
-Register → bcrypt.hash(password) → write users/{id}.json
-Login    → bcrypt.verify(password, hash) → issue UUID token → store in user file
-Request  → Authorization: Bearer {token} → validate against stored token
-Admin    → Authorization: Basic base64(user:pass) → validate against .env
-```
+The frontend sends REST requests to the backend, and the backend reads and writes JSON files for users, games, leaderboard data, and per-user resume progress.
 
 ---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **Python 3.10+** added to your system `PATH`
 
-### 1. Clone
+- **Python 3.10+** available on your PATH — download from [python.org](https://www.python.org/downloads/) and check **"Add python.exe to PATH"** during installation
+
+### 1. Configure the app
+
 ```bash
-git clone https://github.com/shakthicode/Sudoko-Arena.git
-cd Sudoko-Arena
+copy .env.example .env
 ```
 
-### 2. Configure
-```bash
-cp .env.example .env
-```
-Edit `.env` and set a secure admin password:
+Optionally update [.env](.env) values:
+
 ```env
 PORT=8888
 ADMIN_USERNAME=admin
-ADMIN_PASSWORD=your_secure_password_here
+ADMIN_PASSWORD=change_me_in_production
 ```
 
-### 3. Install Python Dependencies
-```bash
-pip install -r requirements.txt
-```
+### 2. Launch (Windows — Recommended)
 
-### 4. Run
+**Simply double-click `run.bat`.** The launcher will automatically:
 
-**Windows (one-click):**
+- ✅ Validate your Python version (3.10+ required)
+- ✅ Create an isolated `.venv` virtual environment
+- ✅ Install `bcrypt` and `python-dotenv` on first run
+- ✅ Detect and resolve any port conflicts
+- ✅ Start the backend server in the background
+- ✅ Wait until the server is ready
+- ✅ Open `http://127.0.0.1:8888` in your default browser
+- ✅ Cleanly shut down on ENTER keypress
+
 ```cmd
 run.bat
 ```
-The launcher automatically installs dependencies, starts the server, and opens your browser.
 
-**All platforms (manual):**
+### 3. Manual Launch (any platform)
+
 ```bash
+# Install dependencies once
+pip install -r requirements.txt
+
+# Start the server
 python backend/server.py
 ```
-Then open [http://localhost:8888](http://localhost:8888).
+
+Then open `http://127.0.0.1:8888` in your browser.
+
+> 💡 See [docs/launcher-documentation.md](docs/launcher-documentation.md) for the silent launch and Windows installer packaging guides.
 
 ---
 
 ## 📡 API Reference
 
-Full REST API documentation: [`docs/api-documentation.md`](docs/api-documentation.md)
+The full REST reference is in [docs/api-documentation.md](docs/api-documentation.md).
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| `POST` | `/api/auth/register` | None | Create a new user account |
-| `POST` | `/api/auth/login` | None | Authenticate and receive session token |
-| `POST` | `/api/users/update` | Bearer | Update user profile / progression |
-| `GET` | `/api/games/{userId}` | Bearer | Retrieve user game history |
-| `POST` | `/api/games/save` | Bearer | Save or update a game state |
-| `GET` | `/api/leaderboard` | None | Fetch global leaderboard |
-| `POST` | `/api/leaderboard/update` | Bearer | Submit new leaderboard score |
-| `GET` | `/api/users` | Basic Auth | List all users (admin) |
-| `GET` | `/api/games` | Basic Auth | List all game records (admin) |
-| `DELETE` | `/api/admin/users/{id}` | Basic Auth | Delete a user (admin) |
+Main endpoints:
+
+- POST /api/auth/register
+- POST /api/auth/login
+- POST /api/users/update
+- POST /api/games/save
+- GET /api/progress
+- POST /api/progress/save
+- GET /api/leaderboard
+- POST /api/leaderboard/update
+- GET /api/users (admin)
+- GET /api/games (admin)
 
 ---
 
 ## 📂 Project Structure
 
-```
+```text
 Sudoko-Arena/
-│
-├── frontend/               # React SPA (single-page application)
-│   └── index.html          # Complete React app with JSX, Tailwind, and game engine
-│
-├── backend/                # Python REST API server + Spring Boot migration guide
-│   ├── server.py           # BaseHTTPRequestHandler-based API (current)
-│   ├── schema.sql          # PostgreSQL production schema (future migration)
-│   └── README.md           # Spring Boot migration guide
-│
-├── database/               # Local JSON flat-file database (git-ignored)
-│   ├── users/              # Per-user profile JSON files
-│   ├── games/              # Per-user game history JSON files
-│   └── leaderboard.json    # Global leaderboard snapshot
-│
-├── docs/                   # Technical documentation
-│   ├── architecture.md     # System architecture & data flow diagrams
-│   ├── api-documentation.md # Full REST API endpoint reference
-│   └── database-design.md  # JSON schema + PostgreSQL migration strategy
-│
-├── screenshots/            # Application UI screenshots for README
-├── tests/                  # Test directory (future unit/integration tests)
-├── scripts/                # Utility scripts (future)
-├── assets/                 # Static assets (future)
-│
-├── .env                    # Local configuration (git-ignored)
-├── .env.example            # Configuration template
-├── .gitattributes          # Cross-platform line-ending normalization
-├── .gitignore              # Excludes database, logs, cache, secrets
-├── CONTRIBUTING.md         # Contributor onboarding guide
-├── LICENSE                 # MIT License
-├── README.md               # Project documentation (this file)
-├── requirements.txt        # Python dependencies (bcrypt, python-dotenv)
-└── run.bat                 # Windows one-click launcher
+├── backend/                      # Python REST API
+│   ├── server.py                 # HTTP request handler & routes
+│   └── schema.sql                # SQL schema reference (future DB)
+├── database/                     # JSON flat-file persistence (git-ignored)
+│   ├── users/                    # Per-user profile files
+│   ├── games/                    # Per-user game history files
+│   └── leaderboard.json          # Global leaderboard snapshot
+├── docs/                         # Documentation
+│   ├── api-documentation.md      # Full REST API reference
+│   ├── architecture.md           # System architecture overview
+│   ├── database-design.md        # Data model documentation
+│   └── launcher-documentation.md # Windows launcher guide
+├── frontend/                     # Single-page app entry point
+│   └── index.html                # React + TailwindCSS (CDN)
+├── logs/                         # Runtime logs (git-ignored)
+├── screenshots/                  # Screenshot assets
+├── tests/                        # Pytest test suite
+│   └── test_server.py            # 18 unit + integration tests
+├── .env.example                  # Example environment variables
+├── .gitignore                    # Excludes .venv, logs, database, secrets
+├── requirements.txt              # Python dependencies (bcrypt, python-dotenv)
+├── run.bat                       # 🚀 Windows release launcher
+└── README.md                     # Project overview
 ```
 
 ---
 
-## 🎮 Gameplay Guide
+## 🧪 Testing
 
-1. **Register** at the landing page → choose username + avatar emoji
-2. **Select Difficulty** → Easy / Medium / Hard / Expert / Nightmare
-3. **Play** → click a cell → enter a number (1-9) via keyboard or number pad
-4. Use **Smart Hint** for a logical explanation of the correct move
-5. Toggle **Notes Mode** to mark candidate numbers in a cell
-6. Use **Undo** to reverse any move
-7. Complete the board to earn **XP**, **achievements**, and **leaderboard ranking**
-8. Return daily to maintain your **streak** and attempt the **Daily Challenge**
+Run the regression suite with:
+
+```bash
+python -m pytest tests/ -v
+```
 
 ---
 
-## 🗄️ Database & Migration
+## 🗄️ Database and Migration Notes
 
-Current storage uses lightweight JSON flat files (zero external dependencies). For production deployment, a complete PostgreSQL schema and Spring Boot migration guide is available:
-
-- [`backend/schema.sql`](backend/schema.sql) — Full PostgreSQL DDL with indexes, constraints, and audit triggers
-- [`backend/README.md`](backend/README.md) — Spring Boot + JWT migration walkthrough
-- [`docs/database-design.md`](docs/database-design.md) — Design rationale and data models
+The current implementation uses JSON files for local persistence. A PostgreSQL-oriented schema is still available in [backend/schema.sql](backend/schema.sql) as a migration reference for future backend evolution.
 
 ---
 
-## 🔮 Future Roadmap
+## 🔮 Future Directions
 
-- [ ] **FastAPI / Spring Boot** — Migrate from `http.server` to a production-grade framework
-- [ ] **PostgreSQL** — Replace flat-file JSON with a relational database
-- [ ] **JWT Authentication** — Replace UUID tokens with signed JWTs (expiry + refresh)
-- [ ] **WebSocket Multiplayer** — Real-time head-to-head Sudoku race mode
-- [ ] **Docker Support** — Containerize for one-command deployment anywhere
-- [ ] **CI/CD Pipeline** — GitHub Actions for linting, testing, and automated deployment
-- [ ] **PWA / Mobile App** — Offline-capable Progressive Web App with service workers
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! See [`CONTRIBUTING.md`](CONTRIBUTING.md) for setup instructions, coding guidelines, and the pull request workflow.
-
----
-
-## 📄 License
-
-This project is licensed under the [MIT License](LICENSE).
-
----
-
-## 👤 Author
-
-**Anuvarshan M**
-
-[![GitHub](https://img.shields.io/badge/GitHub-shakthicode-181717?logo=github)](https://github.com/shakthicode)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-anuvarshan06-0A66C2?logo=linkedin)](https://linkedin.com/in/anuvarshan06)
+- Move the backend to a more production-oriented framework
+- Add a real relational database layer
+- Expand the admin tooling and analytics views
+- Add richer mobile and offline support

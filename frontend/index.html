@@ -647,6 +647,12 @@
     }
 
     /* Responsive */
+    @media (max-width: 768px) {
+      .modal-card {
+        padding: 1.25rem;
+      }
+    }
+
     @media (max-width: 640px) {
       .sudoku-cell {
         font-size: 0.8rem;
@@ -654,6 +660,11 @@
 
       .num-btn {
         font-size: 1rem;
+      }
+
+      .toast {
+        min-width: auto;
+        max-width: calc(100vw - 2rem);
       }
     }
   </style>
@@ -1056,15 +1067,43 @@
         });
       } catch { /* silent fail */ }
     }
+
+    async function apiLoadProgress(user) {
+      if (!user?.id) return null;
+      const token = user.token || loadUser()?.token;
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      try {
+        const res = await fetch(`${API_BASE}/api/progress?userId=${user.id}`, { headers });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data.progress || null;
+      } catch { return null; }
+    }
+
+    async function apiSaveProgress(user, progressPayload) {
+      if (!user?.id) return;
+      const token = user.token || loadUser()?.token;
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      try {
+        await fetch(`${API_BASE}/api/progress/save`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ userId: user.id, ...progressPayload }),
+        });
+      } catch { /* silent fail */ }
+    }
     // ─────────────────────────────────────────────────────────────────────────────
 
     function loadUser() {
       return LS.get('sv_user', null);
     }
     function saveUser(user) {
-      LS.set('sv_user', user);
+      const safeUser = user ? Object.fromEntries(Object.entries(user).filter(([key]) => key !== 'password')) : null;
+      LS.set('sv_user', safeUser);
       // Also persist to server JSON file (fire-and-forget)
-      if (user) apiSaveUser(user);
+      if (safeUser) apiSaveUser(safeUser);
     }
     function loadGameState() {
       return LS.get('sv_game', null);
@@ -1072,6 +1111,28 @@
     function saveGameState(state) {
       LS.set('sv_game', state);
     }
+    function getCampaignState(user, fallback = { phase: 'Easy', round: 0 }) {
+      if (!user) return fallback;
+      if (user.resumeProgress?.campaignPhase) {
+        return {
+          phase: user.resumeProgress.campaignPhase,
+          round: Math.max(0, Number(user.resumeProgress.campaignRound) || 0),
+        };
+      }
+      const progress = user.campaignProgress || {};
+      const phases = Object.keys(CAMPAIGN_CONFIG);
+      let bestPhase = fallback.phase;
+      let bestRound = fallback.round;
+      for (const phase of phases) {
+        const round = Number(progress[phase]) || 0;
+        if (round > bestRound) {
+          bestRound = round;
+          bestPhase = phase;
+        }
+      }
+      return { phase: bestPhase, round: bestRound };
+    }
+
     function loadLeaderboard() {
       const lb = LS.get('sv_leaderboard', null);
       if (lb) return lb;
@@ -1554,6 +1615,24 @@
       );
     }
 
+    function PasswordInput({ id, label, value, onChange, error, placeholder, autoComplete = 'current-password' }) {
+      const [show, setShow] = useState(false);
+      return (
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-1.5">{label}</label>
+          <div className="relative">
+            <input id={id} type={show ? 'text' : 'password'} placeholder={placeholder}
+              value={value} onChange={onChange} autoComplete={autoComplete}
+              className={`form-input pr-16 ${error ? 'error' : ''}`} />
+            <button type="button" onClick={() => setShow(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors">
+              {show ? 'Hide' : 'Show'}
+            </button>
+          </div>
+          {error && <p className="text-error text-xs mt-1.5 flex items-center gap-1"><span>⚠</span>{error}</p>}
+        </div>
+      );
+    }
+
     // ============================================================
     // LOGIN PAGE
     // ============================================================
@@ -1608,16 +1687,14 @@
         // Try server first, fall back to localStorage
         apiLoginUser(form.email, form.password).then(serverUser => {
           if (serverUser) {
-            // Sync server user into localStorage accounts
             const stored = LS.get('sv_accounts', {});
-            stored[serverUser.id] = { ...serverUser, password: form.password };
+            stored[serverUser.id] = { ...serverUser };
             LS.set('sv_accounts', stored);
             onLogin(serverUser);
             addToast(`Welcome back, ${serverUser.username}! 👋`, 'success');
             setLoading(false);
             return;
           }
-          // Fallback: localStorage check
           const stored = LS.get('sv_accounts', {});
           const account = Object.values(stored).find(a => a.email === form.email);
           if (!account) {
@@ -1625,13 +1702,7 @@
             setLoading(false);
             return;
           }
-          if (account.password !== form.password) {
-            setErrors({ password: 'Incorrect password' });
-            setLoading(false);
-            return;
-          }
-          onLogin(account);
-          addToast(`Welcome back, ${account.username}! 👋`, 'success');
+          setErrors({ email: 'Offline sign-in is unavailable. Please sign in with the server running.' });
           setLoading(false);
         });
       }
@@ -1675,13 +1746,10 @@
                   )}
                   {errors.email && <p className="text-error text-xs mt-1.5 flex items-center gap-1"><span>⚠</span>{errors.email}</p>}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1.5">Password</label>
-                  <input id="login-password" type="password" placeholder="••••••••"
-                    value={form.password} onChange={e => { setForm({ ...form, password: e.target.value }); setErrors({ ...errors, password: '' }); }}
-                    className={`form-input ${errors.password ? 'error' : ''}`} />
-                  {errors.password && <p className="text-error text-xs mt-1.5 flex items-center gap-1"><span>⚠</span>{errors.password}</p>}
-                </div>
+                <PasswordInput id="login-password" label="Password" placeholder="••••••••"
+                  value={form.password}
+                  onChange={e => { setForm({ ...form, password: e.target.value }); setErrors({ ...errors, password: '' }); }}
+                  error={errors.password} autoComplete="current-password" />
                 <button type="submit" id="login-submit" disabled={loading}
                   className="btn-primary w-full py-3 text-base rounded-xl flex items-center justify-center gap-2">
                   {loading ? <span className="animate-spin">⟳</span> : null}
@@ -1768,12 +1836,13 @@
           streakDays: [],
           createdAt: new Date().toISOString(),
         };
-        // Save locally first (instant)
-        accounts[newUser.id] = newUser;
+        const { password: _unusedPassword, ...persistedUser } = newUser;
+        // Save locally first (instant) without keeping plaintext credentials
+        accounts[newUser.id] = persistedUser;
         LS.set('sv_accounts', accounts);
         // Also register on server (fire-and-forget)
         apiRegisterUser(newUser, form.password);
-        onLogin(newUser);
+        onLogin(persistedUser);
         addToast(`Welcome to Sudoko-Arena, ${newUser.username}! 🎉`, 'achievement');
         setLoading(false);
       }
@@ -1819,20 +1888,14 @@
                     className={`form-input ${errors.email ? 'error' : ''}`} />
                   {errors.email && <p className="text-error text-xs mt-1 flex items-center gap-1">⚠ {errors.email}</p>}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1.5">Password</label>
-                  <input id="reg-password" type="password" placeholder="Min. 6 characters"
-                    value={form.password} onChange={e => { setForm({ ...form, password: e.target.value }); setErrors({ ...errors, password: '' }); }}
-                    className={`form-input ${errors.password ? 'error' : ''}`} />
-                  {errors.password && <p className="text-error text-xs mt-1 flex items-center gap-1">⚠ {errors.password}</p>}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1.5">Confirm Password</label>
-                  <input id="reg-confirm" type="password" placeholder="Repeat password"
-                    value={form.confirm} onChange={e => { setForm({ ...form, confirm: e.target.value }); setErrors({ ...errors, confirm: '' }); }}
-                    className={`form-input ${errors.confirm ? 'error' : ''}`} />
-                  {errors.confirm && <p className="text-error text-xs mt-1 flex items-center gap-1">⚠ {errors.confirm}</p>}
-                </div>
+                <PasswordInput id="reg-password" label="Password" placeholder="Min. 6 characters"
+                  value={form.password}
+                  onChange={e => { setForm({ ...form, password: e.target.value }); setErrors({ ...errors, password: '' }); }}
+                  error={errors.password} autoComplete="new-password" />
+                <PasswordInput id="reg-confirm" label="Confirm Password" placeholder="Repeat password"
+                  value={form.confirm}
+                  onChange={e => { setForm({ ...form, confirm: e.target.value }); setErrors({ ...errors, confirm: '' }); }}
+                  error={errors.confirm} autoComplete="new-password" />
                 <button type="submit" id="reg-submit" disabled={loading}
                   className="btn-primary w-full py-3 text-base rounded-xl flex items-center justify-center gap-2">
                   {loading ? <span className="animate-spin">⟳</span> : null}
@@ -2186,7 +2249,27 @@
           userId: user?.id,
         };
         saveGameState(state);
-      }, [userBoard, notes, time, mistakes, hintsUsed]);
+        if (user?.id && !complete) {
+          apiSaveProgress(user, {
+            campaignProgress: user.campaignProgress || {},
+            resumeProgress: {
+              difficulty,
+              campaignPhase,
+              campaignRound,
+              isBoss,
+              isDaily,
+              puzzle: puzzle.map(r => [...r]),
+              solved: solved.map(r => [...r]),
+              userBoard: userBoard.map(r => [...r]),
+              notes: notes?.map(r => r.map(s => [...s])),
+              mistakes,
+              hintsUsed,
+              time,
+              history,
+            },
+          });
+        }
+      }, [userBoard, notes, time, mistakes, hintsUsed, complete, user?.id, difficulty, campaignPhase, campaignRound, isBoss, isDaily]);
 
       // Keyboard
       useEffect(() => {
@@ -2457,6 +2540,21 @@
             streak: newStreak, maxStreak: Math.max(user.maxStreak || 0, newStreak), streakDays: newStreakDays,
             bestTime: newBestTime,
             campaignProgress: newProgress,
+            resumeProgress: won ? null : {
+              difficulty,
+              campaignPhase,
+              campaignRound,
+              isBoss,
+              isDaily,
+              puzzle: puzzle ? puzzle.map(r => [...r]) : null,
+              solved: solved ? solved.map(r => [...r]) : null,
+              userBoard: userBoard ? userBoard.map(r => [...r]) : null,
+              notes: null,
+              mistakes: finalMistakes,
+              hintsUsed,
+              time,
+              history: [],
+            },
           };
 
           // Update leaderboard
@@ -2476,6 +2574,10 @@
           LS.set('sv_accounts', accounts);
           setUser(updatedUser);
           apiSaveUser(updatedUser);
+          apiSaveProgress(updatedUser, {
+            campaignProgress: newProgress,
+            resumeProgress: updatedUser.resumeProgress,
+          });
           apiUpdateLeaderboard({ id: user.id, username: user.username, avatar: user.avatar, score: newTotalScore, games: newGamesPlayed });
           apiSaveGameResult(user.id, {
             gameId: `game_${user.id}_${Date.now()}`,
@@ -2607,6 +2709,8 @@
                         ${isGiven ? 'cell-given' : (!isErr && !isHint ? 'cell-user' : '')}
                       `}
                           style={{
+                            borderTop: r % 3 === 0 ? '2px solid rgba(37,99,235,0.4)' : '1px solid rgba(255,255,255,0.06)',
+                            borderLeft: c % 3 === 0 ? '2px solid rgba(37,99,235,0.4)' : '1px solid rgba(255,255,255,0.06)',
                             borderRight: (c + 1) % 3 === 0 && c < 8 ? '2px solid rgba(37,99,235,0.4)' : '1px solid rgba(255,255,255,0.06)',
                             borderBottom: (r + 1) % 3 === 0 && r < 8 ? '2px solid rgba(37,99,235,0.4)' : '1px solid rgba(255,255,255,0.06)',
                           }}>
@@ -3228,12 +3332,10 @@
                       value={creds.username} onChange={e => setCreds({ ...creds, username: e.target.value })}
                       className="form-input" autoComplete="off" />
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Password</label>
-                    <input type="password" placeholder="••••••••"
-                      value={creds.password} onChange={e => setCreds({ ...creds, password: e.target.value })}
-                      className="form-input" />
-                  </div>
+                  <PasswordInput id="admin-password" label="Password" placeholder="••••••••"
+                    value={creds.password}
+                    onChange={e => setCreds({ ...creds, password: e.target.value })}
+                    error="" autoComplete="current-password" />
                   {error && (
                     <div className="flex items-center gap-2 p-3 rounded-lg bg-red-900/30 border border-red-500/30 text-red-300 text-sm">
                       <span>🚫</span><span>{error}</span>
@@ -3590,6 +3692,12 @@
       // Persist user
       useEffect(() => { saveUser(user); }, [user]);
 
+      useEffect(() => {
+        if (!user) return;
+        const nextCampaign = getCampaignState(user);
+        setCampaign(prev => (prev.phase === nextCampaign.phase && prev.round === nextCampaign.round ? prev : nextCampaign));
+      }, [user?.id, user?.campaignProgress, user?.resumeProgress]);
+
       function addToast(message, type = 'info') {
         const id = Date.now() + Math.random();
         setToasts(t => [...t, { id, message, type }]);
@@ -3599,8 +3707,15 @@
         setToasts(t => t.filter(toast => toast.id !== id));
       }
 
-      function handleLogin(u) {
-        setUser(u);
+      async function handleLogin(u) {
+        const progress = await apiLoadProgress(u);
+        const mergedUser = {
+          ...u,
+          campaignProgress: progress?.campaignProgress || u.campaignProgress || {},
+          resumeProgress: progress?.resumeProgress || u.resumeProgress || null,
+        };
+        setUser(mergedUser);
+        setCampaign(getCampaignState(mergedUser));
         setPage('dashboard');
       }
       function handleLogout() {

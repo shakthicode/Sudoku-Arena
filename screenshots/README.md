@@ -1,21 +1,24 @@
 # Screenshots
 
-Place your project screenshots here. Recommended captures:
+This folder currently contains the local screenshot assets used for the project documentation and portfolio preview.
 
-| Filename | Description |
-|----------|-------------|
-| `home.png` | Landing page with hero section and features |
-| `login.png` | Login form with email suggestion dropdown |
-| `dashboard.png` | User dashboard with stats, XP bar, and recent games |
-| `board.png` | Active Sudoku board with notes mode and timer |
-| `leaderboard.png` | Global leaderboard rankings |
-| `admin.png` | Admin data panel (secured) |
-| `results.png` | Game results / win screen with score breakdown |
+## Current files
 
-## How to Add Screenshots
+- Admin login page.png
+- Admin panel.png
+- Campaign.png
+- Daily Challenge.png
+- Dashboard.png
+- Game.png
+- Leaderboard.png
+- Login.png
+- profile.png
+- Result.png
 
-1. Run the project: `python server.py`
-2. Open `http://localhost:8888` in your browser
-3. Take screenshots of each page (F12 → Device mode for mobile views)
-4. Save them in this `screenshots/` folder with the filenames listed above
-5. Commit: `git add screenshots/ && git commit -m "docs: add screenshots"`
+## How to add or rename screenshots
+
+1. Start the app with `python backend/server.py`
+2. Open http://localhost:8888 in your browser
+3. Capture the relevant pages (landing page, login, dashboard, gameplay, leaderboard, admin, results)
+4. Save the files into this folder with descriptive names
+5. Update the links in [README.md](../README.md) if the filenames change

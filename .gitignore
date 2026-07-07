@@ -1,43 +1,60 @@
-# Database JSON flat files
-database/users/
-database/games/
-database/leaderboard.json
-*.json.bak
-
-# Secrets & Environment variables
+# Environment and secrets
 .env
+.env.*
 !.env.example
+!.env.sample
 
-# Python Cache & Runtime directories
+# Python runtime and tooling
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
 *.pyd
+.pytest_cache/
 .ipynb_checkpoints/
-
-# Virtual environments
+.mypy_cache/
 .venv/
 venv/
 env/
 ENV/
+*.egg-info/
 
-# Development Tools & Editors
-.idea/
-.vscode/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.swp
-
-# Frontend Node packages & distribution builds
-node_modules/
-dist/
-build/
-.eslintcache
-
-# Runtime logs & artifacts
+# Local data, runtime state, and database artifacts
+database/*
+!database/.gitkeep
+!database/users/.gitkeep
+!database/games/.gitkeep
+*.json.bak
+*.sqlite
+*.sqlite3
 logs/
 *.log
 *.pid
 server_output.log
+server.pid
+
+# Frontend build output and package managers
+node_modules/
+dist/
+build/
+coverage/
+.eslintcache
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Generated assets and archives
+assets/*.mp4
+assets/*.wav
+assets/*.mov
+*.zip
+*.tar.gz
+*.bak

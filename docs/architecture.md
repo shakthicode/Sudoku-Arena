@@ -1,98 +1,80 @@
 # 🏗️ System Architecture Documentation
 
-This document describes the high-level architecture, flowcharts, and backend integrations of **Sudoko-Arena**.
+This document reflects the current implementation of Sudoko-Arena: a browser-based game served from a single HTML frontend, backed by a Python HTTP server and JSON files.
 
 ---
 
-## 🗺️ High-Level System Architecture
+## 🗺️ High-Level Architecture
 
-```mermaid
-graph TD
-    A[React SPA Frontend] -->|HTTP Requests| B[Python http.server Backend]
-    B -->|Read / Write| C[(Local JSON Database)]
-    C -->|users.json| D[Profiles & Auth]
-    C -->|games.json| E[Match History]
-    C -->|leaderboard.json| F[Global Rankings]
+```text
+Browser UI (frontend/index.html)
+        │
+        ▼
+Python HTTP API (backend/server.py)
+        │
+        ▼
+Local JSON storage (database/)
 ```
 
-### 1. Frontend Layer
-- **Technology Stack**: React 18, TailwindCSS CDN, Babel standalone parser, and Space Grotesk/Inter Google Fonts.
-- **Engine Rules**: Custom algorithmic generator with backtracking solver to ensure single-solution boards across 5 difficulties: Easy, Medium, Hard, Expert, and Nightmare.
-- **Routing**: Client-side state-based routing. Route guards protect paths `/dashboard`, `/game`, and `/results`.
+### Frontend layer
 
-### 2. Backend Layer
-- **Technology Stack**: Single-threaded Python 3 HTTP REST engine built on `BaseHTTPRequestHandler`.
-- **Database Persistence Layer**: Uses synchronized local JSON flat files using threading locks (`threading.Lock()`) to prevent race conditions during write/read operations.
-- **Security Middleware**: Supports custom Basic HTTP Authentication validator for administrative routes and custom Bearer Token parser for standard API mutations.
+- A single-page UI built in [frontend/index.html](../frontend/index.html)
+- Uses React via CDN, Tailwind CSS, and Babel for in-browser JSX compilation
+- Handles gameplay, auth forms, leaderboard views, campaign progression, and results screens
+
+### Backend layer
+
+- A lightweight Python server built on BaseHTTPRequestHandler
+- Serves the frontend and exposes JSON REST endpoints
+- Validates Bearer tokens for user actions and Basic Auth for admin actions
+- Persists user, game, leaderboard, and resume-progress data in JSON files
+
+### Persistence layer
+
+- [database/users](../database/users) stores per-user JSON profiles
+- [database/games](../database/games) stores per-user game history
+- [database/leaderboard.json](../database/leaderboard.json) stores leaderboard state
 
 ---
 
-## 🔄 Sequence Flows
+## 🔄 Main Flows
 
-### 1. Authentication & Auto-Logout Flow
+### Authentication flow
 
-```mermaid
-sequenceDiagram
-    actor User
-    participant Browser as React SPA
-    participant Server as Python API
-    participant DB as JSON DB
+1. The browser sends credentials to POST /api/auth/register or POST /api/auth/login
+2. The server verifies the password and issues a UUID-based session token
+3. The frontend stores the token locally and sends it back on protected calls
 
-    Note over Browser: Page Re-entry / Refresh Triggered
-    Browser->>Browser: useEffect: force logout (clear session state)
-    User->>Browser: Input Email & Password
-    Browser->>Server: POST /api/auth/login
-    Server->>DB: Read users.json & verify password (bcrypt check)
-    alt Valid Credentials
-        Server->>Server: Generate UUID session token
-        Server->>DB: Write updated user session token
-        Server-->>Browser: 200 OK + User profile & token
-        Browser->>Browser: Store token in LocalStorage
-    else Invalid Credentials
-        Server-->>Browser: 401 Unauthorized (Error alert)
-    end
-```
+### Game flow
 
-### 2. Game Progress & Save Flow
+1. The frontend generates or restores a puzzle
+2. The user plays the board, uses notes/undo/hints, and the browser keeps local state up to date
+3. On win or loss, the UI sends a game result to POST /api/games/save
+4. The server updates the per-user game record and updates the saved scoreboard state
 
-```mermaid
-sequenceDiagram
-    actor Player
-    participant Game as Game Loop (SPA)
-    participant Server as Python API
-    participant DB as JSON DB
+### Resume progress flow
 
-    Player->>Game: Cell update / Notes mode toggled
-    Game->>Game: Save Game State to LocalStorage (client caching)
-    Note over Game: On Win / Loss / Abandon
-    Game->>Server: POST /api/games/save (Authorization: Bearer token)
-    Server->>Server: Verify token is valid
-    alt Token Valid
-        Server->>DB: Append/Update game in games.json
-        Server-->>Game: 200 OK
-    else Token Invalid / Missing
-        Server-->>Game: 401 Unauthorized
-    end
-```
+1. The frontend calls GET /api/progress after a sign-in to restore campaign state
+2. The server reads the user's saved resume-progress payload from the user JSON file
+3. The game page rehydrates the board, notes, time spent, and campaign context
 
-### 3. Leaderboard Submission Flow
+### Leaderboard flow
 
-```mermaid
-sequenceDiagram
-    actor Player
-    participant SPA as React SPA
-    participant Server as Python API
-    participant DB as JSON DB
+1. The frontend calculates the score after the game ends
+2. It sends the result to POST /api/leaderboard/update
+3. The server updates the JSON leaderboard and returns the new ranking
 
-    SPA->>SPA: Calculate score (XP, time bonus, mistake penalty)
-    SPA->>Server: POST /api/leaderboard/update (Authorization: Bearer token)
-    Server->>Server: Verify session token matches payload
-    alt Valid
-        Server->>DB: Read leaderboard.json
-        Server->>Server: Sort and assign rank (Top 50)
-        Server->>DB: Write updated rankings
-        Server-->>SPA: 200 OK (returns new global rank)
-    else Invalid
-        Server-->>SPA: 401 Unauthorized
-    end
-```
+---
+
+## 🔐 Security Notes
+
+- Passwords are hashed with bcrypt when available and can fall back to SHA-256 for legacy compatibility
+- User IDs are validated as UUIDs before filesystem access to reduce path traversal risk
+- Admin routes are protected with HTTP Basic Auth
+- Protected game and progress mutations require a valid Bearer token
+
+---
+
+## 🧪 Runtime Notes
+
+The local launcher in [run.bat](../run.bat) starts the Python server and opens the app in the browser. The app is designed to run locally without any external database service.
