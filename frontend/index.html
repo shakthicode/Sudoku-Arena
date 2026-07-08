@@ -3586,21 +3586,29 @@
       }
 
       function handleRefresh() {
-        if (!serverMode) { loadLocalData(); return; }
-        if (authHeader) {
-          setFetching(true);
-          fetch(`${API_BASE}/api/users`, {
-            headers: { 'Authorization': `Basic ${authHeader}` }
+        setFetching(true);
+        const token = authHeader || btoa(`${creds.username}:${creds.password}`);
+        fetch(`${API_BASE}/api/users`, {
+          headers: { 'Authorization': `Basic ${token}` },
+          signal: AbortSignal.timeout ? AbortSignal.timeout(4000) : undefined,
+        })
+          .then(async (res) => {
+            if (res.ok) {
+              const data = await res.json();
+              setUsers(data.users || []);
+              setAuthHeader(token);
+              setServerMode(true);
+              fetchRestData(token);
+            } else {
+              loadLocalData();
+            }
           })
-            .then(async (res) => {
-              if (res.ok) {
-                const data = await res.json();
-                setUsers(data.users || []);
-              }
-            })
-            .catch(console.error);
-          fetchRestData(authHeader);
-        }
+          .catch(() => {
+            loadLocalData();
+          })
+          .finally(() => {
+            setFetching(false);
+          });
       }
 
       if (!authed) {
