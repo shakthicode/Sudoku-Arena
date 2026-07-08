@@ -141,6 +141,33 @@ Then open `http://127.0.0.1:8888` in your browser.
 
 > 💡 See [docs/launcher-documentation.md](docs/launcher-documentation.md) for the silent launch and Windows installer packaging guides.
 
+### 4. Build & Local Preview
+
+To verify the production build pipeline locally:
+
+```bash
+# Clean install (creates node_modules context if needed)
+npm install
+
+# Compile the static frontend assets to dist/
+npm run build
+
+# Start a local preview server on the compiled build
+npm run preview
+```
+
+---
+
+## 🌐 Netlify Deployment
+
+Sudoko-Arena is fully prepared for cloud deployment on **Netlify**.
+
+### Deployment Settings:
+- **Build Command**: `npm run build`
+- **Publish Directory**: `dist`
+- **Environment Variables**: No sensitive backend variables are required in the Netlify cloud since the hosted frontend executes entirely client-side and dynamically falls back to `localStorage` for offline gameplay.
+- **API Redirection**: SPA routing and redirects are automatically configured during the build script using a generated `dist/_redirects` rule.
+
 ---
 
 ## 📡 API Reference
@@ -215,4 +242,3 @@ The current implementation uses JSON files for local persistence. A PostgreSQL-o
 - Add a real relational database layer
 - Expand the admin tooling and analytics views
 - Add richer mobile and offline support
-# Sudoko-Arena

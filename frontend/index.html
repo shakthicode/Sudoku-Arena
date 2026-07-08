@@ -1001,8 +1001,13 @@
       set: (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)); } catch { } },
     };
 
-    // ── Server API helpers (saves to data/users.json, data/games.json) ────────────
-    const API_BASE = window.location.origin;
+    // ── Server API helpers ────────────────────────────────────────────────────────
+    // When running locally (Python backend), API calls hit the same origin.
+    // On any static host (Netlify, custom domain, etc.) the backend is not
+    // available — all fetch() calls will fail silently inside their try/catch
+    // blocks and the app seamlessly falls back to localStorage.
+    const _isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+    const API_BASE = _isLocal ? window.location.origin : 'http://127.0.0.1:8888';
 
     async function apiSaveUser(user) {
       if (!user || !user.id) return;

@@ -1,0 +1,17 @@
+{
+  "name": "sudoko-arena",
+  "version": "1.0.0",
+  "description": "Sudoko-Arena - Competitive Sudoku Game",
+  "private": true,
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "node scripts/build.js",
+    "start": "python backend/server.py",
+    "preview": "python -m http.server 8888 --directory dist",
+    "test": "python -m pytest tests/ -v"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
