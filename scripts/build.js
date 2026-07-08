@@ -6,7 +6,7 @@ const srcFile = path.join(rootDir, 'frontend', 'index.html');
 const distDir = path.join(rootDir, 'dist');
 const destFile = path.join(distDir, 'index.html');
 
-console.log('=== Suduku-Arena Frontend Build ===');
+console.log('=== Sudoku-Arena Frontend Build ===');
 
 try {
   // Create dist directory if it doesn't exist

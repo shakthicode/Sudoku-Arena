@@ -1,4 +1,4 @@
-# Contributing to Suduku-Arena
+# Contributing to Sudoku-Arena
 
 Thank you for your interest in contributing! Here's how to get started.
 
@@ -9,8 +9,8 @@ Thank you for your interest in contributing! Here's how to get started.
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/shakthicode/Suduku-Arena.git
-   cd Suduku-Arena
+   git clone https://github.com/shakthicode/Sudoku-Arena.git
+   cd Sudoku-Arena
    ```
 
 2. **Install Python dependencies**

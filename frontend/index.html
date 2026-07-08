@@ -4,9 +4,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Suduku-Arena – Train Your Brain Every Day</title>
+  <title>Sudoku-Arena – Train Your Brain Every Day</title>
   <meta name="description"
-    content="Suduku-Arena is a modern competitive Sudoku platform with AI hints, daily challenges, leaderboards, achievements, and user progression. Play free online Sudoku now." />
+    content="Sudoku-Arena is a modern competitive Sudoku platform with AI hints, daily challenges, leaderboards, achievements, and user progression. Play free online Sudoku now." />
   <meta name="keywords" content="sudoku, online sudoku, sudoku game, daily sudoku, competitive sudoku" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -1174,7 +1174,7 @@
             <button onClick={() => setPage(user ? 'dashboard' : 'landing')}
               className="flex items-center gap-2 font-display font-bold text-xl group">
               <div className="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center text-sm font-bold shadow-lg group-hover:scale-105 transition-transform">S</div>
-              <span className="gradient-text">Suduku-Arena</span>
+              <span className="gradient-text">Sudoku-Arena</span>
             </button>
 
             {/* Desktop nav */}
@@ -1244,7 +1244,7 @@
         { icon: '🎖️', title: 'Achievements', desc: '15 unique achievements to unlock, from Speed Runner to the legendary Nightmare Slayer.' },
       ];
       const testimonials = [
-        { user: 'NeuralNinja', avatar: '🤖', text: 'Suduku-Arena completely changed how I think about logic puzzles. The AI hints are incredible!', stars: 5 },
+        { user: 'NeuralNinja', avatar: '🤖', text: 'Sudoku-Arena completely changed how I think about logic puzzles. The AI hints are incredible!', stars: 5 },
         { user: 'PuzzleMaestro', avatar: '🎭', text: 'Best Sudoku platform on the internet. The competitive leaderboards keep me coming back every day.', stars: 5 },
         { user: 'GridGuru', avatar: '🧩', text: 'Finally, a Sudoku game that feels premium. The design is beautiful and the gameplay is flawless.', stars: 5 },
       ];
@@ -1429,7 +1429,7 @@
                 <div className="flex flex-col gap-4">
                   <div className="flex items-center gap-2 font-display font-bold">
                     <div className="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center text-sm font-bold shadow-glow-primary flex-shrink-0">S</div>
-                    <span className="gradient-text text-lg">Suduku-Arena</span>
+                    <span className="gradient-text text-lg">Sudoku-Arena</span>
                   </div>
                   {/* Slightly wider to allow natural two-line wrap */}
                   <p className="text-slate-500 text-xs leading-relaxed max-w-xs">
@@ -1468,7 +1468,7 @@
               <div className="border-t border-white/5 pt-5 flex flex-col sm:flex-row items-center justify-between gap-4">
 
                 {/* Left — Copyright */}
-                <p className="text-slate-600 text-xs order-3 sm:order-1">© 2026 Suduku-Arena. All rights reserved.</p>
+                <p className="text-slate-600 text-xs order-3 sm:order-1">© 2026 Sudoku-Arena. All rights reserved.</p>
 
                 {/* Center — Professional credit line */}
                 <p className="text-slate-500 text-xs flex items-center gap-1.5 order-1 sm:order-2">
@@ -1899,7 +1899,7 @@
         // Also register on server (fire-and-forget)
         apiRegisterUser(newUser, form.password);
         onLogin(persistedUser);
-        addToast(`Welcome to Suduku-Arena, ${newUser.username}! 🎉`, 'achievement');
+        addToast(`Welcome to Sudoku-Arena, ${newUser.username}! 🎉`, 'achievement');
         setLoading(false);
       }
 
@@ -1912,7 +1912,7 @@
           <div className="relative w-full max-w-md" style={{ animation: 'bounceIn 0.5s ease-out' }}>
             <div className="text-center mb-8">
               <div className="w-16 h-16 rounded-2xl gradient-bg flex items-center justify-center text-2xl font-bold mx-auto mb-4 shadow-glow-primary">S</div>
-              <h1 className="text-3xl font-display font-bold text-white">Join Suduku-Arena</h1>
+              <h1 className="text-3xl font-display font-bold text-white">Join Sudoku-Arena</h1>
               <p className="text-slate-400 mt-2">Create your free account and start competing</p>
             </div>
             <div className="glass rounded-2xl p-8 shadow-glass">

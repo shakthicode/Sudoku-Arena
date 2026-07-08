@@ -1,5 +1,5 @@
 """
-Suduku-Arena – Secure Local REST API Server
+Sudoku-Arena – Secure Local REST API Server
 ==========================================
 Serves index.html and handles user data via REST endpoints.
 Data is persisted in database/users/, database/games/, database/leaderboard.json.
@@ -623,7 +623,7 @@ def main():
 
     print()
     print("  +================================================+")
-    print("  |          Suduku-Arena Local Server             |")
+    print("  |          Sudoku-Arena Local Server             |")
     print("  +================================================+")
     print(f"  |  URL  : http://127.0.0.1:{PORT}                    |")
     print(f"  |  Data : database/                              |")

@@ -1,6 +1,6 @@
 # 📡 API Documentation
 
-**Suduku-Arena REST API** — served locally by [backend/server.py](../backend/server.py) at http://localhost:8888.
+**Sudoku-Arena REST API** — served locally by [backend/server.py](../backend/server.py) at http://localhost:8888.
 
 ---
 

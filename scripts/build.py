@@ -6,7 +6,7 @@ src_file = os.path.join(root_dir, 'frontend', 'index.html')
 dist_dir = os.path.join(root_dir, 'dist')
 dest_file = os.path.join(dist_dir, 'index.html')
 
-print('=== Suduku-Arena Frontend Build (Python) ===')
+print('=== Sudoku-Arena Frontend Build (Python) ===')
 
 try:
     if not os.path.exists(dist_dir):

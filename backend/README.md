@@ -1,6 +1,6 @@
-# Suduku-Arena – Python Local REST API Server
+# Sudoku-Arena – Python Local REST API Server
 
-> This document describes the **actual** backend for Suduku-Arena: a lightweight Python 3 HTTP server that runs entirely on your local machine with no external services or databases required.
+> This document describes the **actual** backend for Sudoku-Arena: a lightweight Python 3 HTTP server that runs entirely on your local machine with no external services or databases required.
 
 ---
 

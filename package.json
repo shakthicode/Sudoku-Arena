@@ -1,7 +1,7 @@
 {
-  "name": "Suduku-Arena",
+  "name": "Sudoku-Arena",
   "version": "1.0.0",
-  "description": "Suduku-Arena - Competitive Sudoku Game",
+  "description": "Sudoku-Arena - Competitive Sudoku Game",
   "private": true,
   "engines": {
     "node": ">=18.0.0"

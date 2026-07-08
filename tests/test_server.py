@@ -1,5 +1,5 @@
 """
-Suduku-Arena – Server Tests
+Sudoku-Arena – Server Tests
 ============================
 Run from the project root:
     python -m pytest tests/ -v

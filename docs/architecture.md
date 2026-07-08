@@ -1,6 +1,6 @@
 # 🏗️ System Architecture Documentation
 
-This document reflects the current implementation of Suduku-Arena: a browser-based game served from a single HTML frontend, backed by a Python HTTP server and JSON files.
+This document reflects the current implementation of Sudoku-Arena: a browser-based game served from a single HTML frontend, backed by a Python HTTP server and JSON files.
 
 ---
 

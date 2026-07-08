@@ -1,7 +1,7 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-title Suduku-Arena - Local Server
+title Sudoku-Arena - Local Server
 
 rem Move to the folder this .bat file lives in (project root)
 set "ROOT=%~dp0"
@@ -9,7 +9,7 @@ if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
 cd /d "%ROOT%"
 
 echo ============================================
-echo   Suduku-Arena - Starting Local Server
+echo   Sudoku-Arena - Starting Local Server
 echo ============================================
 echo Project folder: %ROOT%
 echo.
@@ -64,7 +64,7 @@ start "" cmd /c "timeout /t 2 /nobreak >nul & start "" "%URL%""
 
 echo.
 echo ============================================
-echo   Suduku-Arena is running at %URL%
+echo   Sudoku-Arena is running at %URL%
 echo   Press CTRL+C to stop the server.
 echo   ^(If asked "Terminate batch job (Y/N)?", press Y^)
 echo ============================================
