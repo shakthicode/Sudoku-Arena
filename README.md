@@ -31,7 +31,7 @@ The application is engineered to operate seamlessly without the internet, fallin
 
 The application can be compiled to static assets and deployed to hosting providers like **Netlify** or **GitHub Pages**. 
 
-* **Live Demo URL:** [https://suduko-arena.netlify.app/](https://suduko-arena.netlify.app/)
+* **Live Demo URL:** [https://sudoku-arena.netlify.app/](https://sudoku-arena.netlify.app/)
 * **Offline Ready:** Simply load the URL once, and the entire game remains fully playable even when disconnected from the network.
 
 ---
@@ -307,5 +307,3 @@ This project is licensed under the terms of the MIT License. See the [LICENSE](L
 
 - **Developer:** [shakthicode](https://github.com/shakthicode)
 - **Repository:** [Sudoku-Arena](https://github.com/shakthicode/Sudoku-Arena)
-# Sudoku-Arena
-# Sudoku-Arena
