@@ -852,13 +852,12 @@
       return { puzzle, solved };
     }
 
-    // Generate daily puzzle (seeded by date)
-    function generateDailyPuzzle() {
+    // Generate daily puzzle seeded by date — difficulty varies per user
+    function generateDailyPuzzle(difficulty = 'Hard') {
       const today = new Date();
       const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-      // Use seed to create deterministic puzzle (simplified)
       const rng = mulberry32(seed);
-      return generatePuzzleDeterministic(rng, 'Hard');
+      return generatePuzzleDeterministic(rng, difficulty);
     }
 
     function mulberry32(seed) {
@@ -869,6 +868,30 @@
         return ((t ^ t >>> 14) >>> 0) / 4294967296;
       };
     }
+
+    // ── Per-user per-day difficulty assignment ──────────────────────────────────
+    // Deterministically maps (userId + dateString) → one of the 5 difficulties.
+    // Same user always gets the same difficulty on the same day, but it changes
+    // every day and differs across users.
+    function getDailyDifficulty(userId, dateStr) {
+      const str = (userId || 'guest') + (dateStr || new Date().toDateString());
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = Math.imul(31, hash) + str.charCodeAt(i) | 0;
+      }
+      const diffs = ['Easy', 'Medium', 'Hard', 'Expert', 'Nightmare'];
+      return diffs[Math.abs(hash) % diffs.length];
+    }
+
+    // Daily challenge bonus multiplier — higher difficulty = bigger reward
+    const DAILY_BONUS = {
+      Easy:      { mult: 1.2, label: '×1.2',  color: 'text-green-400',  desc: 'Starter boost' },
+      Medium:    { mult: 1.5, label: '×1.5',  color: 'text-blue-400',   desc: 'Good challenge' },
+      Hard:      { mult: 2.0, label: '×2.0',  color: 'text-orange-400', desc: 'Double XP!' },
+      Expert:    { mult: 2.75,label: '×2.75', color: 'text-red-400',    desc: 'Elite reward' },
+      Nightmare: { mult: 4.0, label: '×4.0',  color: 'text-purple-400', desc: 'Legendary!' },
+    };
+
 
     function generatePuzzleDeterministic(rng, difficulty) {
       const board = Array.from({ length: 9 }, () => Array(9).fill(0));
@@ -2690,7 +2713,17 @@
         const finalMistakes = overrideMistakes !== null ? overrideMistakes : mistakes;
         // forfeit: skip score entirely — no navigation, overlay handles it
         if (forfeit) { setShowForfeitOverlay(true); return; }
-        const score = calculateScore(difficulty, time, hintsUsed, finalMistakes);
+        const rawScore = calculateScore(difficulty, time, hintsUsed, finalMistakes);
+        // Apply daily challenge XP bonus multiplier
+        const score = { ...rawScore };
+        if (isDaily && won) {
+          const bonusCfg = DAILY_BONUS[difficulty] || DAILY_BONUS['Hard'];
+          const dailyBonusPts = Math.round(rawScore.total * (bonusCfg.mult - 1));
+          score.dailyBonus = dailyBonusPts;
+          score.total = rawScore.total + dailyBonusPts;
+        } else {
+          score.dailyBonus = 0;
+        }
         if (user) {
           const newAchievements = [...(user.achievements || [])];
           if (won) {
@@ -2795,6 +2828,7 @@
           // Store result — preserve solved board so loss screen can show solution
           const resultData = {
             score, difficulty, time, mistakes: finalMistakes, hintsUsed, won,
+            isDaily,
             solved: solved ? solved.map(r => [...r]) : null,   // for "Show Solution" on loss
             puzzle: puzzle ? puzzle.map(r => [...r]) : null,
             campaignPhase, campaignRound, campaignTotal,
@@ -3101,7 +3135,7 @@
       }
 
       const { score, difficulty, time, mistakes, hintsUsed, won, solved, puzzle, newAchievements,
-        campaignPhase, campaignRound, campaignTotal } = result;
+        campaignPhase, campaignRound, campaignTotal, isDaily: resultIsDaily } = result;
       const isWin = !!won;
       const isLoss = !won;
 
@@ -3167,6 +3201,15 @@
                       <span className={`font-semibold ${row.color}`}>{row.val}</span>
                     </div>
                   ))}
+                  {resultIsDaily && score.dailyBonus > 0 && (() => {
+                    const bonusCfg = DAILY_BONUS[difficulty] || DAILY_BONUS['Hard'];
+                    return (
+                      <div className="flex justify-between text-sm border-t border-yellow-500/20 pt-2">
+                        <span className="text-yellow-400 flex items-center gap-1">📅 Daily Bonus <span className="text-xs opacity-70">({bonusCfg.label} · {bonusCfg.desc})</span></span>
+                        <span className="font-bold text-yellow-400">+{score.dailyBonus.toLocaleString()}</span>
+                      </div>
+                    );
+                  })()}
                   <div className="border-t border-white/10 pt-2 flex justify-between font-bold text-white">
                     <span>Total</span>
                     <span className={isWin ? 'gradient-text' : 'text-red-400'}>{score.total.toLocaleString()}</span>
@@ -3863,7 +3906,7 @@
     // DAILY CHALLENGE PAGE
     // ============================================================
 
-    function DailyChallengePage({ user, setPage, setIsDaily }) {
+    function DailyChallengePage({ user, setPage, setIsDaily, dailyDifficulty }) {
       const [timeLeft, setTimeLeft] = useState(() => {
         const now = new Date();
         const midnight = new Date(now); midnight.setHours(24, 0, 0, 0);
@@ -3884,6 +3927,9 @@
 
       const lb = loadLeaderboard();
 
+      const diffCfg = DIFFICULTY_CONFIG[dailyDifficulty] || DIFFICULTY_CONFIG['Hard'];
+      const bonusCfg = DAILY_BONUS[dailyDifficulty] || DAILY_BONUS['Hard'];
+
       return (
         <div className="min-h-screen pt-20 pb-12 px-4" style={{ animation: 'fadeIn 0.5s ease-out' }}>
           <div className="max-w-4xl mx-auto space-y-8">
@@ -3894,9 +3940,27 @@
               <div className="relative">
                 <div className="text-5xl mb-3">📅</div>
                 <h1 className="text-4xl font-display font-black text-white mb-2">Daily Challenge</h1>
-                <p className="text-yellow-400 font-medium mb-4">{dateStr}</p>
+                <p className="text-yellow-400 font-medium mb-1">{dateStr}</p>
+
+                {/* Today's difficulty badge — unique per user */}
+                {user && (
+                  <div className="flex items-center justify-center gap-3 mb-4 mt-3">
+                    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border ${diffCfg.bg} ${diffCfg.border}`}>
+                      <span className="text-lg">
+                        {dailyDifficulty === 'Easy' ? '🌱' : dailyDifficulty === 'Medium' ? '🧩' : dailyDifficulty === 'Hard' ? '🔥' : dailyDifficulty === 'Expert' ? '🧠' : '👹'}
+                      </span>
+                      <span className={`font-display font-bold text-sm ${diffCfg.color}`}>{dailyDifficulty}</span>
+                      <span className="text-slate-500 text-xs">· Today's difficulty</span>
+                    </div>
+                    <div className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-yellow-900/30 border border-yellow-500/30`}>
+                      <span className="text-yellow-400 font-bold text-sm">{bonusCfg.label}</span>
+                      <span className="text-yellow-500/80 text-xs">XP bonus</span>
+                    </div>
+                  </div>
+                )}
+
                 <p className="text-slate-400 text-sm max-w-lg mx-auto mb-6">
-                  One global puzzle. Every player. Same board. Compete for the top spot on today's leaderboard.
+                  Your puzzle is seeded to today's date — different difficulty for each player. Earn a <strong className="text-yellow-300">{bonusCfg.label} XP multiplier</strong> for completing it!
                 </p>
                 <div className="flex items-center justify-center gap-3 mb-6">
                   {[{ val: h, lbl: 'hours' }, { val: m, lbl: 'minutes' }, { val: s, lbl: 'seconds' }].map((t, i) => (
@@ -3917,7 +3981,7 @@
                   </button>
                 ) : (
                   <div>
-                    <p className="text-slate-400 text-sm mb-3">Sign in to track your score on the daily leaderboard.</p>
+                    <p className="text-slate-400 text-sm mb-3">Sign in to see your assigned difficulty and track your score.</p>
                     <button onClick={() => setPage('register')} className="btn-primary py-3 px-8">
                       Create Free Account
                     </button>
@@ -3966,10 +4030,15 @@
               <div className="glass rounded-2xl p-5">
                 <h3 className="font-semibold text-white mb-3">📜 Today's Rules</h3>
                 <ul className="space-y-2 text-sm text-slate-400">
-                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">•</span>Hard difficulty — no changes</li>
+                  <li className="flex items-start gap-2"><span className={`mt-0.5 font-bold ${diffCfg.color}`}>•</span>
+                    <span>Your difficulty: <span className={`font-semibold ${diffCfg.color}`}>{dailyDifficulty}</span> — assigned by the system</span>
+                  </li>
+                  <li className="flex items-start gap-2"><span className="text-yellow-400 mt-0.5">•</span>
+                    <span>Daily bonus: <span className="text-yellow-300 font-semibold">{bonusCfg.label} XP multiplier</span> — {bonusCfg.desc}</span>
+                  </li>
                   <li className="flex items-start gap-2"><span className="text-primary mt-0.5">•</span>Score based on time + mistakes + hints</li>
-                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">•</span>Submit only once — choose wisely!</li>
-                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">•</span>Rankings update immediately</li>
+                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">•</span>Difficulty varies day by day for each player</li>
+                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">•</span>Rankings update immediately on completion</li>
                 </ul>
               </div>
               <div className="glass rounded-2xl p-5">
@@ -4018,6 +4087,13 @@
       const currentRoundInfo = campaignRounds[campaign.round] || campaignRounds[0];
       const selectedDifficulty = currentRoundInfo.diff;
       const isBoss = currentRoundInfo.boss;
+
+      // Compute today's daily difficulty for this user (seeded: userId + date)
+      // Re-computes only when the user's ID changes (i.e. login/logout)
+      const dailyDifficulty = useMemo(
+        () => getDailyDifficulty(user?.id, new Date().toDateString()),
+        [user?.id]
+      );
 
       // Force logout on app mount/re-entry
       useEffect(() => {
@@ -4084,14 +4160,14 @@
             {page === 'dashboard' && user && <DashboardPage   {...commonProps} />}
             {page === 'difficulty' && <DifficultyPage   {...commonProps} />}
             {page === 'game' && user && <GamePage
-              difficulty={isDaily ? 'Hard' : selectedDifficulty}
+              difficulty={isDaily ? dailyDifficulty : selectedDifficulty}
               isBoss={!isDaily && isBoss}
               campaignPhase={isDaily ? null : campaign.phase}
               campaignRound={isDaily ? null : campaign.round}
               campaignTotal={isDaily ? 0 : campaignRounds.length}
               isDaily={isDaily}
               {...commonProps} />}
-            {page === 'daily' && <DailyChallengePage {...commonProps} setIsDaily={setIsDaily} />}
+            {page === 'daily' && <DailyChallengePage {...commonProps} setIsDaily={setIsDaily} dailyDifficulty={dailyDifficulty} />}
             {page === 'results' && user && <ResultsPage  {...commonProps} />}
             {page === 'leaderboard' && <LeaderboardPage  {...commonProps} />}
             {page === 'admin' && <AdminPage setPage={setPage} />}
