@@ -1,6 +1,6 @@
 # 🧩 Sudoko-Arena
 
-> A premium, local-first Sudoku platform featuring notes mode, smart solver-backed hints, daily challenges, a multi-phase campaign progression system, local statistics tracking, and a read-only admin monitoring dashboard. 
+> A premium, local-first Sudoku platform featuring notes mode, smart solver-backed hints, daily challenges, a multi-phase campaign progression system, and local statistics tracking. 
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-brightgreen?logo=python)](https://python.org)
@@ -23,7 +23,7 @@
 
 Sudoko-Arena delivers a polished, modern, and visually stunning Sudoku gameplay experience. Using a sleek dark glassmorphism layout, it challenges players with daily puzzles, level-up milestones, and a narrative campaign progression culminating in boss rounds. 
 
-The application is engineered to operate seamlessly without the internet, falling back gracefully to client-side browser storage if no server is present. For developers, recruiters, or portfolio reviewers, it also includes a lightweight local Python REST API server to simulate file-based database persistence and admin panel interactions.
+The application is engineered to operate seamlessly without the internet, falling back gracefully to client-side browser storage if no server is present. For developers, recruiters, or portfolio reviewers, it also includes a lightweight local Python REST API server to simulate file-based database persistence.
 
 ---
 
@@ -56,9 +56,8 @@ The application can be compiled to static assets and deployed to hosting provide
 - **Local Achievements:** Unlock badges for specific milestones, such as completing your first game, finishing without using hints, or winning a campaign boss round.
 - **Leaderboard Standings:** Displays a list of top scores, times, and levels.
 
-### 🔐 Offline-First Authentication & Admin Portal
+### 🔐 Offline-First Authentication
 - **Local Accounts:** Create credentials and log in. In offline mode, password validation and profiles are processed client-side.
-- **Administrative Portal:** A read-only dashboard allowing inspection of active users, saved matches, and rankings. The portal automatically toggles its view based on server availability.
 
 ---
 
@@ -68,9 +67,9 @@ The application can be compiled to static assets and deployed to hosting provide
 |:---:|:---:|
 | ![Active Game Screen](screenshots/Game.png) | ![User Profile & Achievements](screenshots/Dashboard.png) |
 
-| 🗺️ Campaign Map | 🛡️ Admin Dashboard |
-|:---:|:---:|
-| ![Campaign Progression](screenshots/Campaign.png) | ![Admin User List & Stats](screenshots/Admin%20panel.png) |
+| 🗺️ Campaign Map |
+|:---:|
+| ![Campaign Progression](screenshots/Campaign.png) |
 
 *Additional screenshot assets can be found in the [screenshots/](screenshots) folder, covering the [Result Screen](screenshots/Result.png), [Leaderboard Rankings](screenshots/Leaderboard.png), and [Login Forms](screenshots/Login.png).*
 
@@ -165,8 +164,6 @@ When running offline, the browser's `localStorage` is used to persist data. The 
    *(Optional)* Customize the environment variables inside [.env](.env):
    ```env
    PORT=8888
-   ADMIN_USERNAME=admin
-   ADMIN_PASSWORD=change_me_in_production
    ```
 
 3. **Install Dependencies:**
@@ -276,7 +273,6 @@ Please keep the following constraints in mind when testing or evaluating this pr
 * **Browser Sandbox Storage:** In static/offline mode, user profiles, game history, and progress are stored exclusively within the browser's `localStorage` sandbox.
 * **Clearing Browser Data Resets Game Progress:** Clearing cookies, history, or site data on your browser will delete all local accounts, levels, records, and active streaks.
 * **Device & Browser Isolation:** User accounts are device- and browser-specific. An account registered in Chrome on your laptop will not be accessible in Firefox on the same laptop or on your mobile device.
-* **Independent Admin Dashboards:** The admin dashboard displays users and games saved in either the local Python server database or your local browser storage. It does not pull data from other players' computers or sync users across different browsers.
 * **No Real-Time Cloud Sync:** The application behaves as a local-first system. There is no central server database hosting, cloud synchronization, or online multiplayer lobby.
 
 ---
@@ -311,4 +307,5 @@ This project is licensed under the terms of the MIT License. See the [LICENSE](L
 
 - **Developer:** [shakthicode](https://github.com/shakthicode)
 - **Repository:** [Sudoko-Arena](https://github.com/shakthicode/Sudoko-Arena)
+# Sudoko-Arena
 # Sudoko-Arena
