@@ -400,6 +400,7 @@ class SudokuHandler(BaseHTTPRequestHandler):
                 "level":         1,
                 "xp":            0,
                 "rank":          "Novice",
+                "loginCount":    1,
                 "gamesPlayed":   0,
                 "gamesWon":      0,
                 "totalScore":    0,
@@ -417,6 +418,26 @@ class SudokuHandler(BaseHTTPRequestHandler):
             }
             write_user(user_id, new_user)
             print(f"  ✅  New user registered: {username} ({email})")
+
+            # Seed initial entry in leaderboard.json
+            try:
+                lb = read_json(LEADERBOARD_FILE, [])
+                if not any(e.get("id") == user_id for e in lb):
+                    lb.append({
+                        "id": user_id,
+                        "username": username,
+                        "avatar": avatar,
+                        "score": 0,
+                        "games": 0,
+                        "level": 1,
+                        "rank": "Novice"
+                    })
+                    lb.sort(key=lambda x: x.get("score", 0), reverse=True)
+                    for i, e in enumerate(lb):
+                        e["rank"] = i + 1
+                    write_json(LEADERBOARD_FILE, lb)
+            except Exception as le:
+                print(f"  [WARN] Could not seed leaderboard entry for new user: {le}")
 
             safe_user = sanitize_user_data(new_user)
             self.send_json(201, {"message": "Account created successfully", "user": safe_user})
@@ -451,6 +472,13 @@ class SudokuHandler(BaseHTTPRequestHandler):
             token = uuid.uuid4().hex
             found["token"]       = token
             found["lastLoginAt"] = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
+            found["loginCount"]  = found.get("loginCount", 0) + 1
+            found["activeSession"] = {
+                "token": token,
+                "loginIp": self.client_address[0],
+                "userAgent": self.headers.get("User-Agent", "Unknown"),
+                "loginTime": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
+            }
             write_user(found["id"], found)
             print(f"  🔐  User logged in: {found['username']}")
 
@@ -540,6 +568,16 @@ class SudokuHandler(BaseHTTPRequestHandler):
                 user_games = user_games[:50]  # keep last 50 entries per user
 
             write_user_games(user_id, user_games)
+
+            # Update user's updatedAt field to mark activity
+            try:
+                user_data = read_user(user_id)
+                if user_data:
+                    user_data["updatedAt"] = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
+                    write_user(user_id, user_data)
+            except Exception as ue:
+                print(f"  [WARN] Could not update user updatedAt on game save: {ue}")
+
             self.send_json(200, {"message": "Game saved", "gameId": game_entry["id"]})
             return
 

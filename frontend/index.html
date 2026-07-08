@@ -1041,9 +1041,10 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),
         });
-        if (res.ok) { const d = await res.json(); return d.user || null; }
-        return null;
-      } catch { return null; }
+        const d = await res.json();
+        if (res.ok) { return { user: d.user, error: null }; }
+        return { user: null, error: d.error || 'Login failed' };
+      } catch { return { user: null, error: 'network_error' }; }
     }
 
     async function apiSaveGameResult(userId, gameData) {
@@ -1689,25 +1690,112 @@
         const errs = validate();
         if (Object.keys(errs).length) { setErrors(errs); return; }
         setLoading(true);
-        // Try server first, fall back to localStorage
-        apiLoginUser(form.email, form.password).then(serverUser => {
+
+        apiLoginUser(form.email, form.password).then(async (result) => {
+          const { user: serverUser, error } = result;
+
           if (serverUser) {
             const stored = LS.get('sv_accounts', {});
             stored[serverUser.id] = { ...serverUser };
             LS.set('sv_accounts', stored);
+
+            // Sync any recent games that were played offline to the server
+            const localGames = serverUser.recentGames || [];
+            for (const g of localGames) {
+              await apiSaveGameResult(serverUser.id, {
+                gameId: g.id,
+                difficulty: g.difficulty,
+                status: g.won ? 'completed' : 'failed',
+                timeElapsed: g.time,
+                mistakesCount: g.mistakes,
+                hintsUsed: g.hintsUsed || 0,
+                score: g.score,
+                won: g.won,
+              });
+            }
+
+            // Sync leaderboard entry if it exists locally
+            const lb = loadLeaderboard();
+            const myEntry = lb.find(e => e.id === serverUser.id);
+            if (myEntry) {
+              await apiUpdateLeaderboard(myEntry);
+            }
+
             onLogin(serverUser);
             addToast(`Welcome back, ${serverUser.username}! 👋`, 'success');
             setLoading(false);
             return;
           }
-          const stored = LS.get('sv_accounts', {});
-          const account = Object.values(stored).find(a => a.email === form.email);
-          if (!account) {
-            setErrors({ email: 'No account found with this email' });
+
+          // If the account does not exist on the server, but it does exist in localStorage
+          // (because the user registered offline), automatically register them on the server now!
+          if (error === 'No account found with this email') {
+            const stored = LS.get('sv_accounts', {});
+            const localAccount = Object.values(stored).find(a => a.email === form.email);
+            if (localAccount) {
+              const regSuccess = await apiRegisterUser({
+                id: localAccount.id,
+                username: localAccount.username,
+                email: localAccount.email,
+                avatar: localAccount.avatar || '🧩',
+              }, form.password);
+
+              if (regSuccess) {
+                // Retry login now that they are registered on the server
+                const retryResult = await apiLoginUser(form.email, form.password);
+                if (retryResult.user) {
+                  // Sync recent games to the server database
+                  const localGames = localAccount.recentGames || [];
+                  for (const g of localGames) {
+                    await apiSaveGameResult(retryResult.user.id, {
+                      gameId: g.id,
+                      difficulty: g.difficulty,
+                      status: g.won ? 'completed' : 'failed',
+                      timeElapsed: g.time,
+                      mistakesCount: g.mistakes,
+                      hintsUsed: g.hintsUsed || 0,
+                      score: g.score,
+                      won: g.won,
+                    });
+                  }
+                  // Sync leaderboard entry
+                  const lb = loadLeaderboard();
+                  const myEntry = lb.find(e => e.id === retryResult.user.id);
+                  if (myEntry) {
+                    await apiUpdateLeaderboard(myEntry);
+                  }
+
+                  stored[retryResult.user.id] = retryResult.user;
+                  LS.set('sv_accounts', stored);
+                  onLogin(retryResult.user);
+                  addToast(`Account synchronized with server! Welcome, ${retryResult.user.username}! 🔄`, 'success');
+                  setLoading(false);
+                  return;
+                }
+              }
+            }
+          }
+
+          if (error === 'Incorrect password') {
+            setErrors({ password: 'Incorrect password' });
             setLoading(false);
             return;
           }
-          setErrors({ email: 'Offline sign-in is unavailable. Please sign in with the server running.' });
+
+          // If server is offline entirely (network_error), allow signing in to a local account
+          if (error === 'network_error') {
+            const stored = LS.get('sv_accounts', {});
+            const account = Object.values(stored).find(a => a.email === form.email);
+            if (account) {
+              // Sign in locally in offline mode
+              onLogin(account);
+              addToast(`Signed in offline mode (local data only) 👋`, 'warning');
+              setLoading(false);
+              return;
+            }
+          }
+
+          setErrors({ email: 'No account found with this email' });
           setLoading(false);
         });
       }
@@ -2172,7 +2260,10 @@
         return null;
       });
 
-
+      const [gameId, setGameId] = useState(() => {
+        if (gameState && gameState.gameId) return gameState.gameId;
+        return `game_${user?.id || 'guest'}_${Date.now()}`;
+      });
 
       const [puzzle, setPuzzle] = useState(null);
       const [solved, setSolved] = useState(null);
@@ -2213,6 +2304,18 @@
           setTime(0);
           setHistory([]);
           setFuture([]);
+          if (user?.id) {
+            apiSaveGameResult(user.id, {
+              gameId,
+              difficulty,
+              status: 'in_progress',
+              timeElapsed: 0,
+              mistakesCount: 0,
+              hintsUsed: 0,
+              score: 0,
+              won: false,
+            });
+          }
           return;
         }
 
@@ -2235,6 +2338,18 @@
         setSolved(gen.solved);
         setUserBoard(gen.puzzle.map(r => [...r]));
         setNotes(Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set())));
+        if (user?.id) {
+          apiSaveGameResult(user.id, {
+            gameId,
+            difficulty,
+            status: 'in_progress',
+            timeElapsed: 0,
+            mistakesCount: 0,
+            hintsUsed: 0,
+            score: 0,
+            won: false,
+          });
+        }
       }, []);
 
       // Timer
@@ -2244,7 +2359,7 @@
         return () => clearInterval(timerRef.current);
       }, [puzzle, complete, paused]);
 
-      // Auto-save
+      // Auto-save & Real-time Game Progress sync
       useEffect(() => {
         if (!puzzle || !userBoard) return;
         const state = {
@@ -2252,6 +2367,7 @@
           notes: notes?.map(r => r.map(s => [...s])),
           mistakes, hintsUsed, time, history,
           userId: user?.id,
+          gameId,
         };
         saveGameState(state);
         if (user?.id && !complete) {
@@ -2273,22 +2389,89 @@
               history,
             },
           });
+          // Sync game in progress status, board, notes, time, mistakes to server database
+          apiSaveGameResult(user.id, {
+            gameId,
+            difficulty,
+            status: 'in_progress',
+            boardState: JSON.stringify(userBoard),
+            notesState: JSON.stringify(notes?.map(r => r.map(s => [...s]))),
+            timeElapsed: time,
+            mistakesCount: mistakes,
+            hintsUsed,
+            won: false,
+          });
         }
-      }, [userBoard, notes, time, mistakes, hintsUsed, complete, user?.id, difficulty, campaignPhase, campaignRound, isBoss, isDaily]);
+      }, [userBoard, notes, time, mistakes, hintsUsed, complete, user?.id, difficulty, campaignPhase, campaignRound, isBoss, isDaily, gameId]);
 
-      // Keyboard
+      // Keyboard & Navigation (skipping fixed cells + Enter/Tab/WASD support)
       useEffect(() => {
+        function navigate(dir) {
+          if (!puzzle || !selected) return;
+          let [r, c] = selected;
+          if (dir === 'up') {
+            let nr = r, found = false;
+            for (let i = r - 1; i >= 0; i--) { if (puzzle[i][c] === 0) { nr = i; found = true; break; } }
+            if (!found) { for (let i = 8; i > r; i--) { if (puzzle[i][c] === 0) { nr = i; found = true; break; } } }
+            if (found) setSelected([nr, c]);
+          }
+          if (dir === 'down') {
+            let nr = r, found = false;
+            for (let i = r + 1; i <= 8; i++) { if (puzzle[i][c] === 0) { nr = i; found = true; break; } }
+            if (!found) { for (let i = 0; i < r; i++) { if (puzzle[i][c] === 0) { nr = i; found = true; break; } } }
+            if (found) setSelected([nr, c]);
+          }
+          if (dir === 'left') {
+            let nc = c, found = false;
+            for (let i = c - 1; i >= 0; i--) { if (puzzle[r][i] === 0) { nc = i; found = true; break; } }
+            if (!found) { for (let i = 8; i > c; i--) { if (puzzle[r][i] === 0) { nc = i; found = true; break; } } }
+            if (found) setSelected([r, nc]);
+          }
+          if (dir === 'right') {
+            let nc = c, found = false;
+            for (let i = c + 1; i <= 8; i++) { if (puzzle[r][i] === 0) { nc = i; found = true; break; } }
+            if (!found) { for (let i = 0; i < c; i++) { if (puzzle[r][i] === 0) { nc = i; found = true; break; } } }
+            if (found) setSelected([r, nc]);
+          }
+        }
+
+        function navigateNext(reverse = false) {
+          if (!puzzle || !selected) return;
+          let [r, c] = selected;
+          const totalCells = 81;
+          let index = r * 9 + c;
+          for (let i = 1; i < totalCells; i++) {
+            const nextIdx = reverse ? (index - i + totalCells) % totalCells : (index + i) % totalCells;
+            const nr = Math.floor(nextIdx / 9);
+            const nc = nextIdx % 9;
+            if (puzzle[nr][nc] === 0) {
+              setSelected([nr, nc]);
+              break;
+            }
+          }
+        }
+
         function handleKey(e) {
           if (!selected || complete || paused || mistakes >= 3) return;
           const [r, c] = selected;
-          if (puzzle?.[r]?.[c] !== 0) return;
           const num = parseInt(e.key);
-          if (num >= 1 && num <= 9) handleNumber(num);
-          if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') handleErase();
-          if (e.key === 'ArrowUp') setSelected([Math.max(r - 1, 0), c]);
-          if (e.key === 'ArrowDown') setSelected([Math.min(r + 1, 8), c]);
-          if (e.key === 'ArrowLeft') setSelected([r, Math.max(c - 1, 0)]);
-          if (e.key === 'ArrowRight') setSelected([r, Math.min(c + 1, 8)]);
+
+          // Number input — only if the selected cell is editable
+          if (puzzle?.[r]?.[c] === 0) {
+            if (num >= 1 && num <= 9) handleNumber(num);
+            if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') handleErase();
+          }
+
+          // Arrow and WASD navigation
+          if (e.key === 'ArrowUp'    || e.key === 'w' || e.key === 'W') { e.preventDefault(); navigate('up'); }
+          if (e.key === 'ArrowDown'  || e.key === 's' || e.key === 'S') { e.preventDefault(); navigate('down'); }
+          if (e.key === 'ArrowLeft'  || e.key === 'a' || e.key === 'A') { e.preventDefault(); navigate('left'); }
+          if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { e.preventDefault(); navigate('right'); }
+
+          // Tab and Enter navigation
+          if (e.key === 'Tab') { e.preventDefault(); navigateNext(e.shiftKey); }
+          if (e.key === 'Enter') { e.preventDefault(); navigateNext(false); }
+
           if (e.key === 'n' || e.key === 'N') setNotesMode(nm => !nm);
           if (e.key === 'z' && (e.ctrlKey || e.metaKey)) handleUndo();
           if (e.key === 'y' && (e.ctrlKey || e.metaKey)) handleRedo();
@@ -2301,6 +2484,7 @@
         if (!selected || !puzzle || complete || paused || mistakes >= 3) return;
         const [r, c] = selected;
         if (puzzle[r][c] !== 0) return;
+        if (errorCells.has(`${r}-${c}`)) return; // Prevent input spam during error red flash lockout
         if (notesMode) {
           const newNotes = notes.map(row => row.map(cell => new Set(cell)));
           if (newNotes[r][c].has(num)) newNotes[r][c].delete(num);
@@ -2326,34 +2510,47 @@
         setFuture([]);
 
         if (solved && num !== solved[r][c]) {
+          // ── Wrong number: show red flash then auto-clear the cell ──────────────
           const newErrors = new Set(errorCells);
           newErrors.add(`${r}-${c}`);
           setErrorCells(newErrors);
           const newMistakes = mistakes + 1;
           setMistakes(newMistakes);
+
+          // Write the wrong number temporarily so the red cell shows the digit
+          setUserBoard(newBoard);
+          setNotes(newNotes);
+
           if (newMistakes >= 3) {
             addToast('3 mistakes — Game Over!', 'error');
-            // Reveal the solved board, stop timer, then go to results immediately
             clearInterval(timerRef.current);
             setTimeout(() => {
               if (solved) setUserBoard(solved.map(rowArr => [...rowArr]));
               setNotes(Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set())));
               setComplete(true);
-              // Trigger results navigation with loss state
               handleCompleteAfterMistakes(newMistakes);
             }, 600);
+          } else {
+            // After 800 ms: remove error highlight AND clear the cell back to empty
+            setTimeout(() => {
+              setErrorCells(ec => { const ne = new Set(ec); ne.delete(`${r}-${c}`); return ne; });
+              setUserBoard(prev => {
+                const cleared = prev.map(row => [...row]);
+                // Only clear if still contains the wrong number (user may have erased it)
+                if (cleared[r][c] === num) cleared[r][c] = 0;
+                return cleared;
+              });
+            }, 800);
           }
-          setTimeout(() => {
-            setErrorCells(ec => { const ne = new Set(ec); ne.delete(`${r}-${c}`); return ne; });
-          }, 800);
         } else {
+          // ── Correct number ───────────────────────────────────────────────────
           setHintCell(null);
+          setUserBoard(newBoard);
+          setNotes(newNotes);
+          // Check complete (all cells correctly filled)
+          const allFilled = newBoard.every((row, ri) => row.every((v, ci) => v !== 0 && (!solved || v === solved[ri][ci])));
+          if (allFilled) handleComplete(newBoard);
         }
-        setUserBoard(newBoard);
-        setNotes(newNotes);
-        // Check complete (all cells correctly filled)
-        const allFilled = newBoard.every((row, ri) => row.every((v, ci) => v !== 0 && (!solved || v === solved[ri][ci])));
-        if (allFilled) handleComplete(newBoard);
       }
 
       function handleErase() {
@@ -3253,31 +3450,59 @@
       const [tab, setTab] = useState('users');
       const [fetching, setFetching] = useState(false);
 
+      // Offline mode: read all user/game/leaderboard data from localStorage
+      const [serverMode, setServerMode] = useState(null); // null=unknown, true=server, false=local
+
+      function loadLocalData() {
+        const accounts = LS.get('sv_accounts', {});
+        const localUsers = Object.values(accounts).map(a => ({
+          id: a.id || '—',
+          username: a.username || '—',
+          email: a.email || '—',
+          avatar: a.avatar || '🧩',
+          level: a.level || 1,
+          rank: a.rank || 'Novice',
+          xp: a.xp || 0,
+          gamesPlayed: a.gamesPlayed || 0,
+          totalScore: a.totalScore || 0,
+          streak: a.streak || 0,
+          createdAt: a.createdAt || null,
+          lastLoginAt: a.lastLoginAt || null,
+        }));
+        const lb = LS.get('sv_leaderboard', []);
+        setUsers(localUsers);
+        setLeaderboard(lb);
+        setGames({});
+        setServerMode(false);
+        setAuthed(true);
+      }
+
       function handleAdminLogin(e) {
         e.preventDefault();
         setLoading(true);
         setError('');
         const token = btoa(`${creds.username}:${creds.password}`);
 
-        // Verify credentials dynamically by trying to query /api/users
+        // Try server first; gracefully fall back to localStorage on Netlify/static hosting
         fetch(`${API_BASE}/api/users`, {
-          headers: { 'Authorization': `Basic ${token}` }
+          headers: { 'Authorization': `Basic ${token}` },
+          signal: AbortSignal.timeout ? AbortSignal.timeout(4000) : undefined,
         })
           .then(async (res) => {
             if (res.ok) {
               const data = await res.json();
               setUsers(data.users || []);
               setAuthHeader(token);
+              setServerMode(true);
               setAuthed(true);
-              // Load the rest of the database records
               fetchRestData(token);
             } else {
               setError('Invalid admin credentials. Access denied.');
             }
           })
-          .catch((err) => {
-            console.error(err);
-            setError('Connection to server failed.');
+          .catch(() => {
+            // Server unreachable (Netlify / static hosting) — fall back to localStorage
+            loadLocalData();
           })
           .finally(() => {
             setLoading(false);
@@ -3300,6 +3525,7 @@
       }
 
       function handleRefresh() {
+        if (!serverMode) { loadLocalData(); return; }
         if (authHeader) {
           setFetching(true);
           fetch(`${API_BASE}/api/users`, {
@@ -3370,9 +3596,9 @@
                 <div>
                   <div className="flex items-center gap-2">
                     <h1 className="text-xl font-display font-bold text-white">Admin Data Panel</h1>
-                    <span className="admin-badge">restricted</span>
+                    <span className="admin-badge text-xs uppercase tracking-wider">{serverMode ? 'Connected' : 'Offline Mode'}</span>
                   </div>
-                  <p className="text-slate-500 text-sm">Logged in as <span className="text-red-400 font-semibold">{creds.username}</span> · Read-only access</p>
+                  <p className="text-slate-500 text-sm">Logged in as <span className="text-red-400 font-semibold">{creds.username || 'Admin'}</span> · Read-only access</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -3384,27 +3610,55 @@
               </div>
             </div>
 
-            {/* Stats Overview */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {[
-                { label: 'Total Users', val: users.length, icon: '👥', color: 'text-blue-400' },
-                { label: 'Total Games', val: totalGames, icon: '🎮', color: 'text-green-400' },
-                { label: 'Leaderboard Size', val: leaderboard.length, icon: '🏆', color: 'text-yellow-400' },
-                { label: 'Active Today', val: users.filter(u => u.lastLoginAt && new Date(u.lastLoginAt) > new Date(Date.now() - 86400000)).length, icon: '⚡', color: 'text-purple-400' },
-              ].map(s => (
-                <div key={s.label} className="stat-card">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-slate-500 text-xs uppercase tracking-wider">{s.label}</span>
-                    <span className="text-xl">{s.icon}</span>
+            {/* Offline Database Fallback Banner */}
+            {!serverMode && (
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 rounded-xl bg-yellow-950/30 border border-yellow-500/30 text-yellow-300 text-sm">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">⚠️</span>
+                  <div>
+                    <h4 className="font-bold text-white mb-0.5">Static Offline Mode Fallback</h4>
+                    <p className="text-yellow-200/80 text-xs">The Python backend server is unreachable. Admin panel is displaying user registration and game history synchronized to local storage (localStorage).</p>
                   </div>
-                  <p className={`text-3xl font-display font-bold ${s.color}`}>{s.val}</p>
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
+
+            {/* Stats Overview */}
+            {(() => {
+              const onlineUsers = users.filter(u => {
+                const lastActive = u.updatedAt || u.lastLoginAt;
+                return lastActive && (new Date(lastActive).getTime() > Date.now() - 5 * 60 * 1000);
+              }).length;
+
+              const allGamesList = Object.values(games).flat();
+              const completedGames = allGamesList.filter(g => g.status === 'completed' || g.won).length;
+              const totalGamesCount = allGamesList.length;
+              const completionRate = totalGamesCount > 0 ? Math.round((completedGames / totalGamesCount) * 100) : 0;
+
+              return (
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                  {[
+                    { label: 'Total Users', val: users.length, icon: '👥', color: 'text-blue-400' },
+                    { label: 'Active Today', val: users.filter(u => u.lastLoginAt && new Date(u.lastLoginAt) > new Date(Date.now() - 86400000)).length, icon: '⚡', color: 'text-purple-400' },
+                    { label: 'Online Users', val: onlineUsers, icon: '🟢', color: 'text-green-400' },
+                    { label: 'Games Played', val: totalGames, icon: '🎮', color: 'text-teal-400' },
+                    { label: 'Completion Rate', val: `${completionRate}%`, icon: '📈', color: 'text-yellow-400' },
+                  ].map(s => (
+                    <div key={s.label} className="stat-card">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-slate-500 text-xs uppercase tracking-wider">{s.label}</span>
+                        <span className="text-xl">{s.icon}</span>
+                      </div>
+                      <p className="text-2xl font-display font-bold text-white">{s.val}</p>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
 
             {/* Tabs */}
             <div className="flex gap-2 bg-slate-800/50 rounded-xl p-1 w-fit">
-              {[['users', '👥 Users'], ['games', '🎮 Games'], ['leaderboard', '🏆 Rankings']].map(([t, label]) => (
+              {[['users', '👥 Users'], ['games', '🎮 Games'], ['leaderboard', '🏆 Rankings'], ['activity', '⚡ Activity']].map(([t, label]) => (
                 <button key={t} onClick={() => setTab(t)}
                   className={`tab-btn text-sm px-5 ${tab === t ? 'active' : ''}`}>
                   {label}
@@ -3520,6 +3774,76 @@
                       </tbody>
                     </table>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Activity Feed Table */}
+            {tab === 'activity' && (
+              <div className="glass rounded-2xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+                  <h2 className="font-display font-bold text-white flex items-center gap-2">⚡ Recent Activity Feed</h2>
+                </div>
+                <div className="p-6 space-y-3 admin-scroll max-h-[500px] overflow-y-auto">
+                  {(() => {
+                    const activities = [];
+                    // Add registrations
+                    users.forEach(u => {
+                      if (u.createdAt) {
+                        activities.push({
+                          type: 'register',
+                          user: u.username,
+                          avatar: u.avatar,
+                          time: new Date(u.createdAt),
+                          desc: 'Registered a new account',
+                        });
+                      }
+                      if (u.lastLoginAt) {
+                        activities.push({
+                          type: 'login',
+                          user: u.username,
+                          avatar: u.avatar,
+                          time: new Date(u.lastLoginAt),
+                          desc: 'Logged in to play',
+                        });
+                      }
+                    });
+                    // Add games
+                    Object.entries(games).forEach(([uid, glist]) => {
+                      const u = users.find(x => x.id === uid);
+                      (glist || []).forEach(g => {
+                        if (g.savedAt) {
+                          activities.push({
+                            type: 'game',
+                            user: u ? u.username : `User ${uid.slice(0, 8)}`,
+                            avatar: u ? u.avatar : '🧩',
+                            time: new Date(g.savedAt),
+                            desc: `Game ${g.status === 'completed' || g.won ? 'won' : g.status === 'in_progress' ? 'started' : 'lost'} (${g.difficulty}) with ${g.mistakesCount} mistakes`,
+                          });
+                        }
+                      });
+                    });
+
+                    // Sort by time descending
+                    activities.sort((a, b) => b.time - a.time);
+
+                    if (activities.length === 0) {
+                      return <p className="text-slate-500 text-sm text-center py-8">No recent activity detected.</p>;
+                    }
+
+                    return activities.slice(0, 25).map((act, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-3.5 rounded-xl bg-slate-900/40 border border-white/5">
+                        <div className="flex items-center gap-3">
+                          <span className="text-xl">{act.avatar}</span>
+                          <div>
+                            <span className="font-semibold text-white mr-2">{act.user}</span>
+                            <span className="text-slate-400 text-xs">{act.desc}</span>
+                          </div>
+                        </div>
+                        <span className="text-xs text-slate-500">{act.time.toLocaleTimeString()} {act.time.toLocaleDateString()}</span>
+                      </div>
+                    ));
+                  })()}
                 </div>
               </div>
             )}
