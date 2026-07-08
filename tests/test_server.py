@@ -1,5 +1,5 @@
 """
-Sudoko-Arena – Server Tests
+Suduku-Arena – Server Tests
 ============================
 Run from the project root:
     python -m pytest tests/ -v
@@ -9,7 +9,7 @@ Tests cover:
   - Password hashing / verification
   - Auth register / login (via live server)
   - UUID injection guard on mutating endpoints
-  - Admin Basic Auth rejection (no browser popup)
+
 """
 
 import base64
@@ -45,9 +45,6 @@ def _start_test_server():
     os.makedirs(srv_mod.USERS_DIR, exist_ok=True)
     os.makedirs(srv_mod.GAMES_DIR, exist_ok=True)
 
-    # Override admin creds to known test values
-    srv_mod.ADMIN_USERNAME = "test_admin"
-    srv_mod.ADMIN_PASSWORD = "test_pass"
 
     from http.server import HTTPServer
     server = HTTPServer(("127.0.0.1", TEST_PORT), srv_mod.SudokuHandler)
@@ -254,38 +251,7 @@ def test_get_games_rejects_traversal_userid():
     assert status == 400
 
 
-# ── Admin Basic Auth ───────────────────────────────────────────────────────────
 
-def test_admin_users_rejects_bad_creds():
-    token = base64.b64encode(b"wrong:creds").decode()
-    status, _ = _request("GET", "/api/users",
-                          headers={"Authorization": f"Basic {token}"})
-    assert status == 401
-
-
-def test_admin_users_accepts_good_creds():
-    token = base64.b64encode(b"test_admin:test_pass").decode()
-    status, data = _request("GET", "/api/users",
-                             headers={"Authorization": f"Basic {token}"})
-    assert status == 200, data
-    assert "users" in data
-
-
-def test_admin_401_has_no_www_authenticate_header():
-    """Browser must NOT show its native popup on failed admin login."""
-    url = BASE_URL + "/api/users"
-    req = urllib.request.Request(
-        url,
-        headers={"Authorization": "Basic " + base64.b64encode(b"bad:creds").decode()}
-    )
-    try:
-        urllib.request.urlopen(req)
-    except urllib.error.HTTPError as e:
-        header_keys = {k.lower() for k in e.headers.keys()}
-        assert "www-authenticate" not in header_keys, \
-            "WWW-Authenticate present — browser popup will appear!"
-    else:
-        raise AssertionError("Expected 401 but got 200")
 
 
 if __name__ == "__main__":

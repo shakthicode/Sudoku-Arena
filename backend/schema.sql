@@ -1,5 +1,5 @@
 -- ============================================================
--- Sudoko-Arena – PostgreSQL Database Schema
+-- Suduku-Arena – PostgreSQL Database Schema
 -- For Spring Boot backend integration
 -- ============================================================
 

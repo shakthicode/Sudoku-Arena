@@ -1,12 +1,12 @@
-# Sudoko-Arena Windows Launcher Documentation
+# Suduku-Arena Windows Launcher Documentation
 
-This document describes the design, operational features, and advanced deployment options of the professional Windows launcher (`run.bat`) for the **Sudoko-Arena** application.
+This document describes the design, operational features, and advanced deployment options of the professional Windows launcher (`run.bat`) for the **Suduku-Arena** application.
 
 ---
 
 ## 🏗️ Core Launcher Design (`run.bat`)
 
-The [run.bat](../run.bat) script automates the complete lifecycle of starting, verifying, and stopping the local Sudoko-Arena application. It eliminates manual environment setup steps and isolates dependencies to guarantee a consistent "double-click" runtime experience for end users.
+The [run.bat](../run.bat) script automates the complete lifecycle of starting, verifying, and stopping the local Suduku-Arena application. It eliminates manual environment setup steps and isolates dependencies to guarantee a consistent "double-click" runtime experience for end users.
 
 ### Lifecycle Phases:
 1. **Environment Check**:
@@ -61,7 +61,7 @@ Set WshShell = Nothing
 
 ## 📦 Option B: Installer-Ready Packaging (Inno Setup)
 
-To package Sudoko-Arena as a standalone offline Windows desktop installer, we recommend using **Inno Setup** (a free, open-source installer generator).
+To package Suduku-Arena as a standalone offline Windows desktop installer, we recommend using **Inno Setup** (a free, open-source installer generator).
 
 ### Packaging Workflow:
 1. Ensure the project root folder has a clean configuration:
@@ -83,7 +83,7 @@ OutputDir=userdocs:SudokuArenaInstaller
 
 [Files]
 ; Copy all project files including the pre-compiled .venv directory
-Source: "C:\path\to\Sudoko-Arena\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
+Source: "C:\path\to\Suduku-Arena\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
 
 [Icons]
 ; Create a Desktop shortcut pointing to the launcher script

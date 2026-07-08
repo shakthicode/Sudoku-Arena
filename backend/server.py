@@ -1,5 +1,5 @@
 """
-Sudoko-Arena – Secure Local REST API Server
+Suduku-Arena – Secure Local REST API Server
 ==========================================
 Serves index.html and handles user data via REST endpoints.
 Data is persisted in database/users/, database/games/, database/leaderboard.json.
@@ -44,9 +44,7 @@ except ImportError:
 if sys.stdout.encoding != 'utf-8':
     sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
-# ── Environment-based configuration (no hardcoded secrets) ────────────────────
-ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "change_me_in_production")
+# ── Environment-based configuration ───────────────────────────────────────────
 PORT           = int(os.environ.get("PORT", 8888))
 
 # ── File paths ─────────────────────────────────────────────────────────────────
@@ -249,34 +247,6 @@ class SudokuHandler(BaseHTTPRequestHandler):
         except Exception:
             return {}
 
-    def check_basic_auth(self):
-        """
-        Validate HTTP Basic Auth against ADMIN_USERNAME / ADMIN_PASSWORD
-        loaded from environment variables (never hardcoded).
-        """
-        auth_header = self.headers.get("Authorization", "")
-        if not auth_header or not auth_header.startswith("Basic "):
-            return False
-        try:
-            encoded_credentials = auth_header[6:]
-            decoded = base64.b64decode(encoded_credentials).decode("utf-8")
-            username, password = decoded.split(":", 1)
-            return username == ADMIN_USERNAME and password == ADMIN_PASSWORD
-        except Exception:
-            return False
-
-    def send_basic_auth_challenge(self):
-        """Respond with 401 without a WWW-Authenticate challenge header.
-        Omitting WWW-Authenticate prevents the browser from showing its own
-        native credential popup; the React admin login form handles the error.
-        """
-        self.send_response(401)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
-        self.end_headers()
-        self.wfile.write(json.dumps({"error": "Unauthorized — admin access required"}).encode("utf-8"))
-
     # ── CORS preflight ──────────────────────────────────────────────────────
     def do_OPTIONS(self):
         self.send_response(204)
@@ -295,38 +265,23 @@ class SudokuHandler(BaseHTTPRequestHandler):
             self.send_html()
             return
 
-        # GET /api/users  → protected admin endpoint
-        if path == "/api/users":
-            if not self.check_basic_auth():
-                self.send_basic_auth_challenge()
-                return
-            users = read_all_users()
-            # Strip password hashes from response
-            safe = [sanitize_user_data(u) for u in users.values()]
-            self.send_json(200, {"users": safe, "total": len(safe)})
-            return
-
         # GET /api/leaderboard  → public
         if path == "/api/leaderboard":
             lb = read_json(LEADERBOARD_FILE, [])
             self.send_json(200, {"leaderboard": lb})
             return
 
-        # GET /api/games  → protected admin endpoint (without userId)
+        # GET /api/games  → protected per-user endpoint (requires userId)
         if path == "/api/games":
             qs  = parse_qs(parsed.query)
             uid = qs.get("userId", [None])[0]
             if not uid:
-                if not self.check_basic_auth():
-                    self.send_basic_auth_challenge()
-                    return
-            if uid:
-                if not is_valid_uuid(uid):
-                    self.send_json(400, {"error": "Invalid userId format"})
-                    return
-                self.send_json(200, {"games": read_user_games(uid)})
-            else:
-                self.send_json(200, {"games": read_all_games()})
+                self.send_json(400, {"error": "userId required"})
+                return
+            if not is_valid_uuid(uid):
+                self.send_json(400, {"error": "Invalid userId format"})
+                return
+            self.send_json(200, {"games": read_user_games(uid)})
             return
 
         # GET /api/progress → protected per-user progress endpoint
@@ -668,10 +623,9 @@ def main():
 
     print()
     print("  +================================================+")
-    print("  |          Sudoko-Arena Local Server             |")
+    print("  |          Suduku-Arena Local Server             |")
     print("  +================================================+")
     print(f"  |  URL  : http://127.0.0.1:{PORT}                    |")
-    print(f"  |  Admin: ADMIN_USERNAME from .env               |")
     print(f"  |  Data : database/                              |")
     print(f"  |  Users: database/users/                        |")
     print(f"  |  Games: database/games/                        |")

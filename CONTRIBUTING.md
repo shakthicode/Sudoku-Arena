@@ -1,4 +1,4 @@
-# Contributing to Sudoko-Arena
+# Contributing to Suduku-Arena
 
 Thank you for your interest in contributing! Here's how to get started.
 
@@ -9,8 +9,8 @@ Thank you for your interest in contributing! Here's how to get started.
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/shakthicode/Sudoko-Arena.git
-   cd Sudoko-Arena
+   git clone https://github.com/shakthicode/Suduku-Arena.git
+   cd Suduku-Arena
    ```
 
 2. **Install Python dependencies**
@@ -25,7 +25,7 @@ Thank you for your interest in contributing! Here's how to get started.
    cp .env.example .env
    ```
 
-   Edit `.env` and set your admin credentials.
+   Edit `.env` if you want to customize the server configuration.
 
 4. **Start the server**
 

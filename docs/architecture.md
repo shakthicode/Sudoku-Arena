@@ -1,6 +1,6 @@
 # 🏗️ System Architecture Documentation
 
-This document reflects the current implementation of Sudoko-Arena: a browser-based game served from a single HTML frontend, backed by a Python HTTP server and JSON files.
+This document reflects the current implementation of Suduku-Arena: a browser-based game served from a single HTML frontend, backed by a Python HTTP server and JSON files.
 
 ---
 
@@ -26,7 +26,7 @@ Local JSON storage (database/)
 
 - A lightweight Python server built on BaseHTTPRequestHandler
 - Serves the frontend and exposes JSON REST endpoints
-- Validates Bearer tokens for user actions and Basic Auth for admin actions
+- Validates Bearer tokens for user mutations and actions
 - Persists user, game, leaderboard, and resume-progress data in JSON files
 
 ### Persistence layer
@@ -70,7 +70,6 @@ Local JSON storage (database/)
 
 - Passwords are hashed with bcrypt when available and can fall back to SHA-256 for legacy compatibility
 - User IDs are validated as UUIDs before filesystem access to reduce path traversal risk
-- Admin routes are protected with HTTP Basic Auth
 - Protected game and progress mutations require a valid Bearer token
 
 ---

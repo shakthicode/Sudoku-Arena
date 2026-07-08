@@ -4,9 +4,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sudoko-Arena – Train Your Brain Every Day</title>
+  <title>Suduku-Arena – Train Your Brain Every Day</title>
   <meta name="description"
-    content="Sudoko-Arena is a modern competitive Sudoku platform with AI hints, daily challenges, leaderboards, achievements, and user progression. Play free online Sudoku now." />
+    content="Suduku-Arena is a modern competitive Sudoku platform with AI hints, daily challenges, leaderboards, achievements, and user progression. Play free online Sudoku now." />
   <meta name="keywords" content="sudoku, online sudoku, sudoku game, daily sudoku, competitive sudoku" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -553,39 +553,7 @@
       font-weight: 700;
     }
 
-    /* Admin panel styles */
-    .admin-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.8rem;
-    }
 
-    .admin-table th {
-      padding: 0.75rem 1rem;
-      text-align: left;
-      background: rgba(37, 99, 235, 0.15);
-      color: #94A3B8;
-      font-weight: 600;
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .admin-table td {
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-      color: #CBD5E1;
-      vertical-align: middle;
-    }
-
-    .admin-table tr:hover td {
-      background: rgba(37, 99, 235, 0.05);
-    }
-
-    .admin-table tr:last-child td {
-      border-bottom: none;
-    }
 
     /* Hero gradient orbs */
     .orb {
@@ -616,37 +584,7 @@
       color: #94A3B8;
     }
 
-    /* Admin badge */
-    .admin-badge {
-      background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.1));
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      color: #FCA5A5;
-      padding: 0.2rem 0.6rem;
-      border-radius: 9999px;
-      font-size: 0.65rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
 
-    /* Scrollable admin table wrapper */
-    .admin-scroll {
-      overflow-x: auto;
-      border-radius: 0.75rem;
-    }
-
-    .admin-scroll::-webkit-scrollbar {
-      height: 4px;
-    }
-
-    .admin-scroll::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    .admin-scroll::-webkit-scrollbar-thumb {
-      background: #334155;
-      border-radius: 2px;
-    }
 
     /* Responsive */
     @media (max-width: 768px) {
@@ -1236,7 +1174,7 @@
             <button onClick={() => setPage(user ? 'dashboard' : 'landing')}
               className="flex items-center gap-2 font-display font-bold text-xl group">
               <div className="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center text-sm font-bold shadow-lg group-hover:scale-105 transition-transform">S</div>
-              <span className="gradient-text">Sudoko-Arena</span>
+              <span className="gradient-text">Suduku-Arena</span>
             </button>
 
             {/* Desktop nav */}
@@ -1306,7 +1244,7 @@
         { icon: '🎖️', title: 'Achievements', desc: '15 unique achievements to unlock, from Speed Runner to the legendary Nightmare Slayer.' },
       ];
       const testimonials = [
-        { user: 'NeuralNinja', avatar: '🤖', text: 'Sudoko-Arena completely changed how I think about logic puzzles. The AI hints are incredible!', stars: 5 },
+        { user: 'NeuralNinja', avatar: '🤖', text: 'Suduku-Arena completely changed how I think about logic puzzles. The AI hints are incredible!', stars: 5 },
         { user: 'PuzzleMaestro', avatar: '🎭', text: 'Best Sudoku platform on the internet. The competitive leaderboards keep me coming back every day.', stars: 5 },
         { user: 'GridGuru', avatar: '🧩', text: 'Finally, a Sudoku game that feels premium. The design is beautiful and the gameplay is flawless.', stars: 5 },
       ];
@@ -1491,7 +1429,7 @@
                 <div className="flex flex-col gap-4">
                   <div className="flex items-center gap-2 font-display font-bold">
                     <div className="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center text-sm font-bold shadow-glow-primary flex-shrink-0">S</div>
-                    <span className="gradient-text text-lg">Sudoko-Arena</span>
+                    <span className="gradient-text text-lg">Suduku-Arena</span>
                   </div>
                   {/* Slightly wider to allow natural two-line wrap */}
                   <p className="text-slate-500 text-xs leading-relaxed max-w-xs">
@@ -1510,10 +1448,7 @@
                     className="footer-link hover:text-slate-200 transition-colors w-full sm:text-center py-1">
                     Leaderboard
                   </button>
-                  <button onClick={() => setPage('admin')}
-                    className="footer-link hover:text-slate-200 transition-colors py-1 flex items-center gap-1.5 sm:justify-center w-full">
-                    <span>🔐</span> Admin Portal
-                  </button>
+
                 </div>
 
                 {/* Column 3 — Creator profile (right-aligned on desktop) */}
@@ -1533,7 +1468,7 @@
               <div className="border-t border-white/5 pt-5 flex flex-col sm:flex-row items-center justify-between gap-4">
 
                 {/* Left — Copyright */}
-                <p className="text-slate-600 text-xs order-3 sm:order-1">© 2026 Sudoko-Arena. All rights reserved.</p>
+                <p className="text-slate-600 text-xs order-3 sm:order-1">© 2026 Suduku-Arena. All rights reserved.</p>
 
                 {/* Center — Professional credit line */}
                 <p className="text-slate-500 text-xs flex items-center gap-1.5 order-1 sm:order-2">
@@ -1964,7 +1899,7 @@
         // Also register on server (fire-and-forget)
         apiRegisterUser(newUser, form.password);
         onLogin(persistedUser);
-        addToast(`Welcome to Sudoko-Arena, ${newUser.username}! 🎉`, 'achievement');
+        addToast(`Welcome to Suduku-Arena, ${newUser.username}! 🎉`, 'achievement');
         setLoading(false);
       }
 
@@ -1977,7 +1912,7 @@
           <div className="relative w-full max-w-md" style={{ animation: 'bounceIn 0.5s ease-out' }}>
             <div className="text-center mb-8">
               <div className="w-16 h-16 rounded-2xl gradient-bg flex items-center justify-center text-2xl font-bold mx-auto mb-4 shadow-glow-primary">S</div>
-              <h1 className="text-3xl font-display font-bold text-white">Join Sudoko-Arena</h1>
+              <h1 className="text-3xl font-display font-bold text-white">Join Suduku-Arena</h1>
               <p className="text-slate-400 mt-2">Create your free account and start competing</p>
             </div>
             <div className="glass rounded-2xl p-8 shadow-glass">
@@ -3495,433 +3430,7 @@
       );
     }
 
-    // ============================================================
-    // ADMIN DATA PANEL
-    // ============================================================
 
-    function AdminPage({ setPage }) {
-      const [authed, setAuthed] = useState(false);
-      const [creds, setCreds] = useState({ username: '', password: '' });
-      const [authHeader, setAuthHeader] = useState('');
-      const [error, setError] = useState('');
-      const [loading, setLoading] = useState(false);
-      const [users, setUsers] = useState([]);
-      const [games, setGames] = useState({});
-      const [leaderboard, setLeaderboard] = useState([]);
-      const [tab, setTab] = useState('users');
-      const [fetching, setFetching] = useState(false);
-
-      // Offline mode: read all user/game/leaderboard data from localStorage
-      const [serverMode, setServerMode] = useState(null); // null=unknown, true=server, false=local
-
-      function loadLocalData() {
-        const accounts = LS.get('sv_accounts', {});
-        const localUsers = Object.values(accounts).map(a => ({
-          id: a.id || '—',
-          username: a.username || '—',
-          email: a.email || '—',
-          avatar: a.avatar || '🧩',
-          level: a.level || 1,
-          rank: a.rank || 'Novice',
-          xp: a.xp || 0,
-          gamesPlayed: a.gamesPlayed || 0,
-          totalScore: a.totalScore || 0,
-          streak: a.streak || 0,
-          createdAt: a.createdAt || null,
-          lastLoginAt: a.lastLoginAt || null,
-        }));
-        const lb = LS.get('sv_leaderboard', []);
-        setUsers(localUsers);
-        setLeaderboard(lb);
-        setGames({});
-        setServerMode(false);
-        setAuthed(true);
-      }
-
-      function handleAdminLogin(e) {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
-        const token = btoa(`${creds.username}:${creds.password}`);
-
-        // Try server first; gracefully fall back to localStorage on Netlify/static hosting
-        fetch(`${API_BASE}/api/users`, {
-          headers: { 'Authorization': `Basic ${token}` },
-          signal: AbortSignal.timeout ? AbortSignal.timeout(4000) : undefined,
-        })
-          .then(async (res) => {
-            if (res.ok) {
-              const data = await res.json();
-              setUsers(data.users || []);
-              setAuthHeader(token);
-              setServerMode(true);
-              setAuthed(true);
-              fetchRestData(token);
-            } else {
-              setError('Invalid admin credentials. Access denied.');
-            }
-          })
-          .catch(() => {
-            // Server unreachable (Netlify / static hosting) — fall back to localStorage
-            loadLocalData();
-          })
-          .finally(() => {
-            setLoading(false);
-          });
-      }
-
-      async function fetchRestData(token) {
-        setFetching(true);
-        try {
-          const [gRes, lRes] = await Promise.all([
-            fetch(`${API_BASE}/api/games`, { headers: { 'Authorization': `Basic ${token}` } }),
-            fetch(`${API_BASE}/api/leaderboard`),
-          ]);
-          if (gRes.ok) { const d = await gRes.json(); setGames(d.games || {}); }
-          if (lRes.ok) { const d = await lRes.json(); setLeaderboard(d.leaderboard || []); }
-        } catch (err) {
-          console.error('Admin fetch error:', err);
-        }
-        setFetching(false);
-      }
-
-      function handleRefresh() {
-        setFetching(true);
-        const token = authHeader || btoa(`${creds.username}:${creds.password}`);
-        fetch(`${API_BASE}/api/users`, {
-          headers: { 'Authorization': `Basic ${token}` },
-          signal: AbortSignal.timeout ? AbortSignal.timeout(4000) : undefined,
-        })
-          .then(async (res) => {
-            if (res.ok) {
-              const data = await res.json();
-              setUsers(data.users || []);
-              setAuthHeader(token);
-              setServerMode(true);
-              fetchRestData(token);
-            } else {
-              loadLocalData();
-            }
-          })
-          .catch(() => {
-            loadLocalData();
-          })
-          .finally(() => {
-            setFetching(false);
-          });
-      }
-
-      if (!authed) {
-        return (
-          <div className="min-h-screen flex items-center justify-center pt-16 px-4">
-            <div className="absolute inset-0 overflow-hidden">
-              <div className="orb w-96 h-96 bg-red-500/10 top-1/4 left-1/4" />
-              <div className="orb w-72 h-72 bg-primary/10 bottom-1/4 right-1/4" />
-            </div>
-            <div className="relative w-full max-w-sm" style={{ animation: 'bounceIn 0.5s ease-out' }}>
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center text-2xl mx-auto mb-4 shadow-glow-error">🔐</div>
-                <h1 className="text-2xl font-display font-bold text-white">Admin Access</h1>
-                <p className="text-slate-500 text-sm mt-1">Restricted area — authorized personnel only</p>
-              </div>
-              <div className="glass rounded-2xl p-7 shadow-glass">
-                <form onSubmit={handleAdminLogin} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Username</label>
-                    <input type="text" placeholder="Admin username"
-                      value={creds.username} onChange={e => setCreds({ ...creds, username: e.target.value })}
-                      className="form-input" autoComplete="off" />
-                  </div>
-                  <PasswordInput id="admin-password" label="Password" placeholder="••••••••"
-                    value={creds.password}
-                    onChange={e => setCreds({ ...creds, password: e.target.value })}
-                    error="" autoComplete="current-password" />
-                  {error && (
-                    <div className="flex items-center gap-2 p-3 rounded-lg bg-red-900/30 border border-red-500/30 text-red-300 text-sm">
-                      <span>🚫</span><span>{error}</span>
-                    </div>
-                  )}
-                  <button type="submit" className="btn-primary w-full py-3 rounded-xl" style={{ background: 'linear-gradient(135deg, #DC2626, #B91C1C)' }}>
-                    🔓 Authenticate
-                  </button>
-                </form>
-                <button onClick={() => setPage('landing')} className="btn-ghost w-full mt-3 text-sm">← Back to Home</button>
-              </div>
-            </div>
-          </div>
-        );
-      }
-
-      const totalGames = Object.values(games).reduce((acc, g) => acc + g.length, 0);
-
-      return (
-        <div className="min-h-screen pt-20 pb-12 px-4" style={{ animation: 'fadeIn 0.4s ease-out' }}>
-          <div className="max-w-6xl mx-auto space-y-6">
-
-            {/* Admin Header */}
-            <div className="glass rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center text-2xl shadow-glow-error">🔐</div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-xl font-display font-bold text-white">Admin Data Panel</h1>
-                    <span className="admin-badge text-xs uppercase tracking-wider">{serverMode ? 'Connected' : 'Offline Mode'}</span>
-                  </div>
-                  <p className="text-slate-500 text-sm">Logged in as <span className="text-red-400 font-semibold">{creds.username || 'Admin'}</span> · Read-only access</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <button onClick={handleRefresh} disabled={fetching}
-                  className="btn-secondary flex items-center gap-2 text-sm py-2">
-                  {fetching ? <span className="animate-spin">⟳</span> : '🔄'} Refresh
-                </button>
-                <button onClick={() => setPage('landing')} className="btn-ghost text-sm">← Exit</button>
-              </div>
-            </div>
-
-            {/* Offline Database Fallback Banner */}
-            {!serverMode && (
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 rounded-xl bg-yellow-950/30 border border-yellow-500/30 text-yellow-300 text-sm">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">⚠️</span>
-                  <div>
-                    <h4 className="font-bold text-white mb-0.5">Static Offline Mode Fallback</h4>
-                    <p className="text-yellow-200/80 text-xs">The Python backend server is unreachable. Admin panel is displaying user registration and game history synchronized to local storage (localStorage).</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Stats Overview */}
-            {(() => {
-              const onlineUsers = users.filter(u => {
-                const lastActive = u.updatedAt || u.lastLoginAt;
-                return lastActive && (new Date(lastActive).getTime() > Date.now() - 5 * 60 * 1000);
-              }).length;
-
-              const allGamesList = Object.values(games).flat();
-              const completedGames = allGamesList.filter(g => g.status === 'completed' || g.won).length;
-              const totalGamesCount = allGamesList.length;
-              const completionRate = totalGamesCount > 0 ? Math.round((completedGames / totalGamesCount) * 100) : 0;
-
-              return (
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-                  {[
-                    { label: 'Total Users', val: users.length, icon: '👥', color: 'text-blue-400' },
-                    { label: 'Active Today', val: users.filter(u => u.lastLoginAt && new Date(u.lastLoginAt) > new Date(Date.now() - 86400000)).length, icon: '⚡', color: 'text-purple-400' },
-                    { label: 'Online Users', val: onlineUsers, icon: '🟢', color: 'text-green-400' },
-                    { label: 'Games Played', val: totalGames, icon: '🎮', color: 'text-teal-400' },
-                    { label: 'Completion Rate', val: `${completionRate}%`, icon: '📈', color: 'text-yellow-400' },
-                  ].map(s => (
-                    <div key={s.label} className="stat-card">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-slate-500 text-xs uppercase tracking-wider">{s.label}</span>
-                        <span className="text-xl">{s.icon}</span>
-                      </div>
-                      <p className="text-2xl font-display font-bold text-white">{s.val}</p>
-                    </div>
-                  ))}
-                </div>
-              );
-            })()}
-
-            {/* Tabs */}
-            <div className="flex gap-2 bg-slate-800/50 rounded-xl p-1 w-fit">
-              {[['users', '👥 Users'], ['games', '🎮 Games'], ['leaderboard', '🏆 Rankings'], ['activity', '⚡ Activity']].map(([t, label]) => (
-                <button key={t} onClick={() => setTab(t)}
-                  className={`tab-btn text-sm px-5 ${tab === t ? 'active' : ''}`}>
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            {/* Users Table */}
-            {tab === 'users' && (
-              <div className="glass rounded-2xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
-                  <h2 className="font-display font-bold text-white flex items-center gap-2">👥 Registered Users <span className="text-xs text-slate-500 font-normal">({users.length} total)</span></h2>
-                </div>
-                <div className="admin-scroll">
-                  {fetching ? (
-                    <div className="text-center py-12 text-slate-400">
-                      <span className="text-3xl animate-spin inline-block">⟳</span>
-                      <p className="mt-2 text-sm">Loading data...</p>
-                    </div>
-                  ) : users.length === 0 ? (
-                    <div className="text-center py-12">
-                      <p className="text-4xl mb-2">📭</p>
-                      <p className="text-slate-500 text-sm">No users registered yet</p>
-                    </div>
-                  ) : (
-                    <table className="admin-table">
-                      <thead><tr>
-                        <th>#</th><th>Avatar</th><th>Username</th><th>Email</th><th>Level</th><th>Rank</th><th>XP</th><th>Games</th><th>Score</th><th>Streak</th><th>Joined</th>
-                      </tr></thead>
-                      <tbody>
-                        {users.map((u, i) => (
-                          <tr key={u.id}>
-                            <td className="text-slate-600">{i + 1}</td>
-                            <td><span className="text-xl">{u.avatar || '🧩'}</span></td>
-                            <td><span className="font-semibold text-white">{u.username}</span></td>
-                            <td className="text-slate-400">{u.email}</td>
-                            <td><span className="font-bold text-blue-400">Lv.{u.level}</span></td>
-                            <td><span className="text-xs font-semibold text-purple-300">{u.rank}</span></td>
-                            <td className="text-yellow-400 font-semibold">{u.xp?.toLocaleString()}</td>
-                            <td className="text-slate-300">{u.gamesPlayed || 0}</td>
-                            <td className="text-green-400 font-semibold">{u.totalScore?.toLocaleString() || 0}</td>
-                            <td className="text-orange-400">{u.streak || 0}🔥</td>
-                            <td className="text-slate-500">{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Games Table */}
-            {tab === 'games' && (
-              <div className="glass rounded-2xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-white/5">
-                  <h2 className="font-display font-bold text-white flex items-center gap-2">🎮 Game Records <span className="text-xs text-slate-500 font-normal">({totalGames} total)</span></h2>
-                </div>
-                <div className="admin-scroll">
-                  {fetching ? (
-                    <div className="text-center py-12 text-slate-400"><span className="text-3xl animate-spin inline-block">⟳</span><p className="mt-2 text-sm">Loading...</p></div>
-                  ) : totalGames === 0 ? (
-                    <div className="text-center py-12"><p className="text-4xl mb-2">🎮</p><p className="text-slate-500 text-sm">No games recorded yet</p></div>
-                  ) : (
-                    <table className="admin-table">
-                      <thead><tr><th>User ID</th><th>Difficulty</th><th>Status</th><th>Score</th><th>Time</th><th>Mistakes</th><th>Hints</th><th>Saved At</th></tr></thead>
-                      <tbody>
-                        {Object.entries(games).flatMap(([uid, glist]) =>
-                          (glist || []).map((g, i) => (
-                            <tr key={`${uid}-${i}`}>
-                              <td className="font-mono text-xs text-slate-500">{uid.slice(0, 8)}…</td>
-                              <td><span className={`text-xs font-bold ${DIFFICULTY_CONFIG[g.difficulty]?.color || 'text-slate-300'}`}>{g.difficulty}</span></td>
-                              <td><span className={`text-xs font-semibold ${g.won ? 'text-green-400' : g.status === 'in_progress' ? 'text-yellow-400' : 'text-red-400'}`}>{g.won ? '✓ Won' : g.status === 'in_progress' ? '⏳ In Progress' : '✗ Lost'}</span></td>
-                              <td className="text-yellow-400 font-semibold">{g.score?.toLocaleString() || '—'}</td>
-                              <td className="text-slate-300">{g.timeElapsed ? `${Math.floor(g.timeElapsed / 60)}:${String(g.timeElapsed % 60).padStart(2, '0')}` : '—'}</td>
-                              <td className={`font-semibold ${g.mistakesCount > 0 ? 'text-red-400' : 'text-slate-500'}`}>{g.mistakesCount || 0}</td>
-                              <td className="text-slate-400">{g.hintsUsed || 0}</td>
-                              <td className="text-slate-500 text-xs">{g.savedAt ? new Date(g.savedAt).toLocaleDateString() : '—'}</td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Leaderboard Table */}
-            {tab === 'leaderboard' && (
-              <div className="glass rounded-2xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-white/5">
-                  <h2 className="font-display font-bold text-white flex items-center gap-2">🏆 Leaderboard <span className="text-xs text-slate-500 font-normal">({leaderboard.length} entries)</span></h2>
-                </div>
-                <div className="admin-scroll">
-                  {fetching ? (
-                    <div className="text-center py-12 text-slate-400"><span className="text-3xl animate-spin inline-block">⟳</span><p className="mt-2 text-sm">Loading...</p></div>
-                  ) : leaderboard.length === 0 ? (
-                    <div className="text-center py-12"><p className="text-4xl mb-2">🏆</p><p className="text-slate-500 text-sm">Leaderboard is empty</p></div>
-                  ) : (
-                    <table className="admin-table">
-                      <thead><tr><th>Rank</th><th>Avatar</th><th>Username</th><th>Score</th><th>Games</th></tr></thead>
-                      <tbody>
-                        {leaderboard.map((e, i) => (
-                          <tr key={e.id || i}>
-                            <td><span className="font-bold text-yellow-400">#{e.rank}</span></td>
-                            <td><span className="text-xl">{e.avatar || '🧩'}</span></td>
-                            <td className="font-semibold text-white">{e.username}</td>
-                            <td className="text-yellow-400 font-bold">{e.score?.toLocaleString()}</td>
-                            <td className="text-slate-400">{e.games}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Activity Feed Table */}
-            {tab === 'activity' && (
-              <div className="glass rounded-2xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
-                  <h2 className="font-display font-bold text-white flex items-center gap-2">⚡ Recent Activity Feed</h2>
-                </div>
-                <div className="p-6 space-y-3 admin-scroll max-h-[500px] overflow-y-auto">
-                  {(() => {
-                    const activities = [];
-                    // Add registrations
-                    users.forEach(u => {
-                      if (u.createdAt) {
-                        activities.push({
-                          type: 'register',
-                          user: u.username,
-                          avatar: u.avatar,
-                          time: new Date(u.createdAt),
-                          desc: 'Registered a new account',
-                        });
-                      }
-                      if (u.lastLoginAt) {
-                        activities.push({
-                          type: 'login',
-                          user: u.username,
-                          avatar: u.avatar,
-                          time: new Date(u.lastLoginAt),
-                          desc: 'Logged in to play',
-                        });
-                      }
-                    });
-                    // Add games
-                    Object.entries(games).forEach(([uid, glist]) => {
-                      const u = users.find(x => x.id === uid);
-                      (glist || []).forEach(g => {
-                        if (g.savedAt) {
-                          activities.push({
-                            type: 'game',
-                            user: u ? u.username : `User ${uid.slice(0, 8)}`,
-                            avatar: u ? u.avatar : '🧩',
-                            time: new Date(g.savedAt),
-                            desc: `Game ${g.status === 'completed' || g.won ? 'won' : g.status === 'in_progress' ? 'started' : 'lost'} (${g.difficulty}) with ${g.mistakesCount} mistakes`,
-                          });
-                        }
-                      });
-                    });
-
-                    // Sort by time descending
-                    activities.sort((a, b) => b.time - a.time);
-
-                    if (activities.length === 0) {
-                      return <p className="text-slate-500 text-sm text-center py-8">No recent activity detected.</p>;
-                    }
-
-                    return activities.slice(0, 25).map((act, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-3.5 rounded-xl bg-slate-900/40 border border-white/5">
-                        <div className="flex items-center gap-3">
-                          <span className="text-xl">{act.avatar}</span>
-                          <div>
-                            <span className="font-semibold text-white mr-2">{act.user}</span>
-                            <span className="text-slate-400 text-xs">{act.desc}</span>
-                          </div>
-                        </div>
-                        <span className="text-xs text-slate-500">{act.time.toLocaleTimeString()} {act.time.toLocaleDateString()}</span>
-                      </div>
-                    ));
-                  })()}
-                </div>
-              </div>
-            )}
-
-            <p className="text-center text-xs text-slate-600">Admin panel — read-only view. Data stored in <code className="text-slate-500">data/*.json</code> · Secured with Basic Auth</p>
-          </div>
-        </div>
-      );
-    }
 
     // ============================================================
     // DAILY CHALLENGE PAGE
@@ -4253,7 +3762,7 @@
             {page === 'daily' && <DailyChallengePage {...commonProps} setIsDaily={setIsDaily} dailyDifficulty={dailyDifficulty} />}
             {page === 'results' && user && <ResultsPage  {...commonProps} />}
             {page === 'leaderboard' && <LeaderboardPage  {...commonProps} />}
-            {page === 'admin' && <AdminPage setPage={setPage} />}
+
           </main>
           <Toast toasts={toasts} removeToast={removeToast} />
         </>

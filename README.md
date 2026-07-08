@@ -1,4 +1,4 @@
-# 🧩 Sudoko-Arena
+# 🧩 Suduku-Arena
 
 > A premium, local-first Sudoku platform featuring notes mode, smart solver-backed hints, daily challenges, a multi-phase campaign progression system, and local statistics tracking. 
 
@@ -21,7 +21,7 @@
 
 ## 📝 Project Description
 
-Sudoko-Arena delivers a polished, modern, and visually stunning Sudoku gameplay experience. Using a sleek dark glassmorphism layout, it challenges players with daily puzzles, level-up milestones, and a narrative campaign progression culminating in boss rounds. 
+Suduku-Arena delivers a polished, modern, and visually stunning Sudoku gameplay experience. Using a sleek dark glassmorphism layout, it challenges players with daily puzzles, level-up milestones, and a narrative campaign progression culminating in boss rounds. 
 
 The application is engineered to operate seamlessly without the internet, falling back gracefully to client-side browser storage if no server is present. For developers, recruiters, or portfolio reviewers, it also includes a lightweight local Python REST API server to simulate file-based database persistence.
 
@@ -98,7 +98,7 @@ The application can be compiled to static assets and deployed to hosting provide
 
 ## 🏗️ Project Architecture
 
-Sudoko-Arena operates under a dual-architecture paradigm depending on how it is accessed:
+Suduku-Arena operates under a dual-architecture paradigm depending on how it is accessed:
 
 ```mermaid
 graph TD
@@ -147,8 +147,8 @@ When running offline, the browser's `localStorage` is used to persist data. The 
 
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/shakthicode/Sudoko-Arena.git
-   cd Sudoko-Arena
+   git clone https://github.com/shakthicode/Suduku-Arena.git
+   cd Suduku-Arena
    ```
 
 2. **Configure Environment Variables:**
@@ -228,7 +228,7 @@ This repository is configured out-of-the-box for deployment on **Netlify**.
 ## 📂 Project Folder Structure
 
 ```text
-Sudoko-Arena/
+Suduku-Arena/
 ├── backend/                      # Python local REST API server
 │   ├── server.py                 # Request handlers, routes, and password validation
 │   └── schema.sql                # PostgreSQL SQL schema reference (migration roadmap)
@@ -306,6 +306,6 @@ This project is licensed under the terms of the MIT License. See the [LICENSE](L
 ## 👤 Author Information
 
 - **Developer:** [shakthicode](https://github.com/shakthicode)
-- **Repository:** [Sudoko-Arena](https://github.com/shakthicode/Sudoko-Arena)
-# Sudoko-Arena
-# Sudoko-Arena
+- **Repository:** [Suduku-Arena](https://github.com/shakthicode/Suduku-Arena)
+# Suduku-Arena
+# Suduku-Arena

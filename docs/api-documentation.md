@@ -1,6 +1,6 @@
 # 📡 API Documentation
 
-**Sudoko-Arena REST API** — served locally by [backend/server.py](../backend/server.py) at http://localhost:8888.
+**Suduku-Arena REST API** — served locally by [backend/server.py](../backend/server.py) at http://localhost:8888.
 
 ---
 
@@ -16,11 +16,9 @@ http://localhost:8888
 
 - Public endpoints do not require authentication.
 - User mutation endpoints require a Bearer token in the Authorization header.
-- Admin endpoints require HTTP Basic Auth using the credentials from [.env](../.env).
 
 ```text
 Authorization: Bearer <session_token>
-Authorization: Basic <base64(username:password)>
 ```
 
 ---
@@ -222,19 +220,13 @@ Example body:
 
 ---
 
-### GET /api/users
-
-Admin-only endpoint to list all registered users.
-
-Authorization: Basic Auth.
-
----
-
 ### GET /api/games
 
-Admin-only endpoint to list stored game records.
+Fetch stored game records for the specified user.
 
-Authorization: Basic Auth.
+Query Parameters:
+- `userId`: UUID (required)
+
 
 ## Status Code Summary
 

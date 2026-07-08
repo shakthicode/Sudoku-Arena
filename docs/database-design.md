@@ -1,6 +1,6 @@
 # 🗄️ Database Design Documentation
 
-Sudoko-Arena currently uses **local JSON flat files** for lightweight persistence. This document covers the current schema, sample records, and a production migration strategy.
+Suduku-Arena currently uses **local JSON flat files** for lightweight persistence. This document covers the current schema, sample records, and a production migration strategy.
 
 ---
 
