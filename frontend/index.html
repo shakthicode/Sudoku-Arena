@@ -197,6 +197,8 @@
       border-radius: 8px;
       overflow: hidden;
       gap: 0;
+      width: 100%;
+      max-width: 480px;
     }
 
     .sudoku-cell {
@@ -204,7 +206,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: clamp(0.7rem, 2.2vw, 1.2rem);
+      font-size: clamp(0.75rem, 1.8vw, 1.25rem);
       font-weight: 500;
       cursor: pointer;
       transition: all 0.15s ease;
@@ -277,7 +279,7 @@
     .num-pad {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 0.5rem;
+      gap: 0.4rem;
     }
 
     .num-btn {
@@ -651,11 +653,14 @@
       .modal-card {
         padding: 1.25rem;
       }
+      .sudoku-grid {
+        max-width: 100%;
+      }
     }
 
     @media (max-width: 640px) {
       .sudoku-cell {
-        font-size: 0.8rem;
+        font-size: clamp(0.7rem, 4vw, 1rem);
       }
 
       .num-btn {
@@ -2881,9 +2886,9 @@
               <div className="progress-fill" style={{ width: progress + '%' }} />
             </div>
 
-            <div className="flex flex-col lg:flex-row gap-6 items-start justify-center">
+            <div className="flex flex-col lg:flex-row gap-6 items-center lg:items-start justify-center">
               {/* Sudoku Board */}
-              <div className="w-full max-w-md mx-auto lg:mx-0 flex-shrink-0">
+              <div className="w-full flex justify-center flex-shrink-0">
                 <div className="sudoku-grid bg-bg-card shadow-glass relative">
                   {userBoard.map((row, r) =>
                     row.map((val, c) => {
@@ -2965,7 +2970,7 @@
               </div>
 
               {/* Right panel */}
-              <div className="w-full max-w-md mx-auto lg:max-w-52 space-y-4">
+              <div className="w-full max-w-sm mx-auto lg:w-64 lg:flex-shrink-0 space-y-4">
                 {/* Number pad */}
                 <div className="glass rounded-xl p-3">
                   <div className="num-pad">
@@ -3858,7 +3863,7 @@
     // DAILY CHALLENGE PAGE
     // ============================================================
 
-    function DailyChallengePage({ user, setPage, setSelectedDifficulty }) {
+    function DailyChallengePage({ user, setPage, setIsDaily }) {
       const [timeLeft, setTimeLeft] = useState(() => {
         const now = new Date();
         const midnight = new Date(now); midnight.setHours(24, 0, 0, 0);
@@ -3906,7 +3911,7 @@
                 </div>
                 <p className="text-slate-500 text-xs mb-4">New puzzle resets in ↑</p>
                 {user ? (
-                  <button onClick={() => { setSelectedDifficulty('Hard'); setPage('game'); }}
+                  <button onClick={() => { setIsDaily(true); setPage('game'); }}
                     className="btn-primary text-lg py-3 px-10 rounded-xl shadow-glow-primary">
                     🎯 Start Today's Challenge
                   </button>
@@ -4005,6 +4010,8 @@
       const [toasts, setToasts] = useState([]);
       // Campaign state: phase = starting difficulty, round = 0-9 index
       const [campaign, setCampaign] = useState({ phase: 'Easy', round: 0 });
+      // Daily challenge flag — when true, GamePage generates the seeded daily puzzle
+      const [isDaily, setIsDaily] = useState(false);
 
       // Derive current round config from campaign
       const campaignRounds = CAMPAIGN_CONFIG[campaign.phase] || CAMPAIGN_CONFIG['Easy'];
@@ -4017,6 +4024,11 @@
         saveUser(null);
         setUser(null);
       }, []);
+
+      // Reset isDaily when navigating away from game
+      useEffect(() => {
+        if (page !== 'game') setIsDaily(false);
+      }, [page]);
 
       // Persist user
       useEffect(() => { saveUser(user); }, [user]);
@@ -4072,13 +4084,14 @@
             {page === 'dashboard' && user && <DashboardPage   {...commonProps} />}
             {page === 'difficulty' && <DifficultyPage   {...commonProps} />}
             {page === 'game' && user && <GamePage
-              difficulty={selectedDifficulty}
-              isBoss={isBoss}
-              campaignPhase={campaign.phase}
-              campaignRound={campaign.round}
-              campaignTotal={campaignRounds.length}
+              difficulty={isDaily ? 'Hard' : selectedDifficulty}
+              isBoss={!isDaily && isBoss}
+              campaignPhase={isDaily ? null : campaign.phase}
+              campaignRound={isDaily ? null : campaign.round}
+              campaignTotal={isDaily ? 0 : campaignRounds.length}
+              isDaily={isDaily}
               {...commonProps} />}
-            {page === 'daily' && <DailyChallengePage {...commonProps} />}
+            {page === 'daily' && <DailyChallengePage {...commonProps} setIsDaily={setIsDaily} />}
             {page === 'results' && user && <ResultsPage  {...commonProps} />}
             {page === 'leaderboard' && <LeaderboardPage  {...commonProps} />}
             {page === 'admin' && <AdminPage setPage={setPage} />}
