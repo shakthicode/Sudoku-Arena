@@ -215,3 +215,4 @@ The current implementation uses JSON files for local persistence. A PostgreSQL-o
 - Add a real relational database layer
 - Expand the admin tooling and analytics views
 - Add richer mobile and offline support
+# Sudoko-Arena
