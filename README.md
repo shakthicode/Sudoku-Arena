@@ -65,13 +65,13 @@ The application can be compiled to static assets and deployed to hosting provide
 
 | 🎮 Active Board | 📊 Dashboard |
 |:---:|:---:|
-| ![Active Game Screen](screenshots/Game.png) | ![User Profile & Achievements](screenshots/Dashboard.png) |
+| ![Active Game Screen](screenshots/Game.png) | ![User Profile & Achievements](screenshots/dashboard.png) |
 
 | 🗺️ Campaign Map |
 |:---:|
 | ![Campaign Progression](screenshots/Campaign.png) |
 
-*Additional screenshot assets can be found in the [screenshots/](screenshots) folder, covering the [Result Screen](screenshots/Result.png), [Leaderboard Rankings](screenshots/Leaderboard.png), and [Login Forms](screenshots/Login.png).*
+*Additional screenshot assets can be found in the [screenshots/](screenshots) folder, covering the [Result Screen](screenshots/Result.png), [Leaderboard Rankings](screenshots/leaderboard.png), and [Login Forms](screenshots/login.png).*
 
 ---
 
