@@ -1,67 +1,98 @@
-# Sudoko-Arena – Spring Boot Backend Guide
+# Sudoko-Arena – Python Local REST API Server
 
-> This document defines the REST API contract and Spring Boot setup instructions for wiring the frontend to a real backend.
+> This document describes the **actual** backend for Sudoko-Arena: a lightweight Python 3 HTTP server that runs entirely on your local machine with no external services or databases required.
 
 ---
 
 ## Tech Stack
 
-| Layer          | Technology          |
-|----------------|---------------------|
-| Framework      | Spring Boot 3.x     |
-| Language       | Java 21             |
-| Database       | PostgreSQL 15+      |
-| Auth           | JWT (JJWT library)  |
-| Passwords      | BCrypt              |
-| Build          | Maven / Gradle      |
-| Migrations     | Flyway              |
+| Layer         | Technology                                  |
+|---------------|---------------------------------------------|
+| Language      | **Python 3** (stdlib only — no framework)   |
+| HTTP Server   | `http.server.HTTPServer` (stdlib)           |
+| Storage       | Local JSON files (`database/` folder)       |
+| Auth          | UUID-based Bearer tokens (session tokens)   |
+| Passwords     | `bcrypt` (preferred) or SHA-256 (fallback)  |
+| Config        | `.env` file via `python-dotenv` (optional)  |
+| Dependencies  | `bcrypt`, `python-dotenv` (both optional)   |
+
+> **No Java. No Spring Boot. No PostgreSQL. No JWT library. No Maven.**  
+> The entire server is a single file: `backend/server.py`.
 
 ---
 
-## Project Setup
+## Project Structure
 
-### 1. Clone & Configure
-
-```bash
-# application.properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/sudokoarena
-spring.datasource.username=postgres
-spring.datasource.password=yourpassword
-spring.jpa.hibernate.ddl-auto=validate
-spring.flyway.enabled=true
-jwt.secret=your-256-bit-secret-key
-jwt.expiration=86400000
-jwt.refresh-expiration=604800000
 ```
+backend/
+├── server.py          ← The entire REST API server (single file)
+└── README.md          ← This file
 
-### 2. Run Migrations
-
-```bash
-# Place schema.sql in src/main/resources/db/migration/V1__initial_schema.sql
-mvn flyway:migrate
-```
-
-### 3. Start Server
-
-```bash
-mvn spring-boot:run
-# Server runs on http://localhost:8080
+database/              ← Auto-created on first run
+├── users/             ← One JSON file per user  (e.g. <uuid>.json)
+├── games/             ← One JSON file per user  (e.g. <uuid>.json)
+└── leaderboard.json   ← Global leaderboard list
 ```
 
 ---
 
-## API Contract
+## Setup & Running
+
+### Prerequisites
+
+- Python 3.8+
+- Optional (but recommended): `bcrypt` and `python-dotenv`
+
+```bash
+pip install bcrypt python-dotenv
+```
+
+If these are not installed, the server falls back gracefully:
+- Passwords are hashed with SHA-256 instead of bcrypt.
+- Environment variables are read directly from the OS.
+
+### 1. Configure Environment
+
+Copy `.env.example` to `.env` and set the port (optional):
+
+```bash
+# .env
+PORT=8888
+```
+
+### 2. Start the Server
+
+```bash
+# From the project root:
+python backend/server.py
+
+# Or from inside the backend/ folder:
+python server.py
+```
+
+The server binds to `http://127.0.0.1:8888` by default.
+
+### 3. Open the App
+
+Navigate to [http://127.0.0.1:8888](http://127.0.0.1:8888) in your browser.
+The server serves `frontend/index.html` automatically.
+
+---
+
+## API Reference
 
 ### Base URL
 ```
-http://localhost:8080/api/v1
+http://127.0.0.1:8888/api
 ```
 
 ### Authentication
 
-All protected endpoints require:
+Protected endpoints require a Bearer token in the `Authorization` header.  
+The token is returned by the `/api/auth/login` and `/api/auth/register` endpoints.
+
 ```
-Authorization: Bearer <jwt_token>
+Authorization: Bearer <token>
 ```
 
 ---
@@ -70,261 +101,216 @@ Authorization: Bearer <jwt_token>
 
 ### Auth
 
-#### POST /auth/register
+#### `POST /api/auth/register`
 ```json
-Request:  { "username": "string", "email": "string", "password": "string", "avatar": "string" }
-Response: { "token": "string", "refreshToken": "string", "user": { ...UserDTO } }
+Request:
+{
+  "username": "string (min 3 chars)",
+  "email":    "string",
+  "password": "string (min 6 chars)",
+  "avatar":   "string (emoji, optional)"
+}
+
+Response 201:
+{
+  "message": "Account created successfully",
+  "user": { ...UserObject }
+}
+
+Response 400: { "error": "Username must be at least 3 characters" }
+Response 409: { "error": "Email already registered" }
 ```
 
-#### POST /auth/login
+#### `POST /api/auth/login`
 ```json
-Request:  { "email": "string", "password": "string" }
-Response: { "token": "string", "refreshToken": "string", "user": { ...UserDTO } }
-```
+Request:
+{
+  "email":    "string",
+  "password": "string"
+}
 
-#### POST /auth/refresh
-```json
-Request:  { "refreshToken": "string" }
-Response: { "token": "string" }
-```
+Response 200:
+{
+  "message": "Login successful",
+  "user": { ...UserObject }
+}
 
-#### POST /auth/logout
-```json
-Request:  { "refreshToken": "string" }
-Response: { "message": "Logged out" }
+Response 401: { "error": "Incorrect password" }
 ```
 
 ---
 
 ### Users
 
-#### GET /users/me *(protected)*
-```json
-Response: { UserDTO }
-```
+#### `POST /api/users/update` *(Bearer token required)*
+Updates user profile fields. Protected fields (`id`, `email`, `password_hash`, `token`, `createdAt`) are never overwritten.
 
-#### GET /users/{id}/stats
 ```json
-Response: {
-  "gamesPlayed": 42, "gamesWon": 35, "winRate": 83.3,
-  "bestTime": 183, "totalScore": 48200, "streak": 7,
-  "maxStreak": 14, "achievements": [...],
-  "recentGames": [...], "difficultyBreakdown": {...}
+Request:
+{
+  "id":          "uuid",
+  "username":    "string",
+  "avatar":      "string",
+  "level":       1,
+  "xp":          0,
+  "gamesPlayed": 0,
+  ...
 }
-```
 
----
-
-### Puzzles
-
-#### GET /puzzles/generate?difficulty=Medium *(protected)*
-```json
-Response: { "id": "uuid", "puzzleData": "81-char-string", "difficulty": "Medium", "cellsFilled": 35 }
-```
-
-#### GET /puzzles/daily
-```json
-Response: { "id": "uuid", "puzzleData": "81-char-string", "date": "2025-07-03", "difficulty": "Hard" }
+Response 200:
+{
+  "message": "User updated",
+  "user": { ...UserObject }
+}
 ```
 
 ---
 
 ### Games
 
-#### POST /games *(protected)*
+#### `GET /api/games?userId=<uuid>`
+Returns the saved game history for a user (up to 50 entries).
+
 ```json
-Request:  { "puzzleId": "uuid", "difficulty": "Medium" }
-Response: { "gameId": "uuid", "createdAt": "..." }
+Response 200:
+{
+  "games": [ ...GameEntry ]
+}
 ```
 
-#### PUT /games/{id}/save *(protected)*
+#### `POST /api/games/save` *(Bearer token required)*
+Saves or updates a game entry for a user.
+
 ```json
-Request:  {
-  "boardState": "81-char-string",
-  "notesState": "json-string",
-  "timeElapsed": 245,
+Request:
+{
+  "userId":       "uuid",
+  "gameId":       "uuid (optional, generated if missing)",
+  "difficulty":   "Easy | Medium | Hard | Expert",
+  "status":       "in_progress | completed",
+  "boardState":   "81-char string",
+  "notesState":   "json-string",
+  "timeElapsed":  245,
   "mistakesCount": 1,
-  "hintsUsed": 0
+  "hintsUsed":    0,
+  "score":        1200,
+  "won":          true
 }
-Response: { "saved": true }
-```
 
-#### POST /games/{id}/complete *(protected)*
-```json
-Request:  { "timeElapsed": 720, "mistakesCount": 0, "hintsUsed": 1, "usedUndo": false }
-Response: {
-  "score": { "base": 500, "diffBonus": 350, "timePenalty": 60, "hintPenalty": 50, "total": 740 },
-  "newAchievements": ["first_victory", "hint_free"],
-  "xpGained": 740,
-  "levelUp": false,
-  "newRank": "Amateur"
+Response 200:
+{
+  "message": "Game saved",
+  "gameId": "uuid"
 }
-```
-
-#### GET /games/{id}/resume *(protected)*
-```json
-Response: { "boardState": "...", "notesState": "...", "timeElapsed": 245, "mistakesCount": 1, "hintsUsed": 0 }
 ```
 
 ---
 
-### Hints
+### Progress
 
-#### POST /games/{id}/hint *(protected)*
+#### `GET /api/progress?userId=<uuid>` *(Bearer token required)*
+Returns campaign and resume progress for a user.
+
 ```json
-Request:  { "row": 3, "col": 5, "currentBoard": "81-char-string" }
-Response: { "number": 7, "reason": "The number 7 is the only valid option for this row." }
+Response 200:
+{
+  "progress": {
+    "campaignProgress": { ... },
+    "resumeProgress":   { ... }
+  }
+}
+```
+
+#### `POST /api/progress/save` *(Bearer token required)*
+Saves campaign and/or resume progress.
+
+```json
+Request:
+{
+  "userId":           "uuid",
+  "campaignProgress": { ... },
+  "resumeProgress":   { ... }
+}
+
+Response 200:
+{
+  "message": "Progress saved",
+  "progress": { ... }
+}
 ```
 
 ---
 
 ### Leaderboard
 
-#### GET /leaderboard?type=global&page=0&size=50
+#### `GET /api/leaderboard`
+Returns the full leaderboard sorted by score (public endpoint).
+
 ```json
-Response: {
-  "content": [
-    { "rank": 1, "userId": "uuid", "username": "NeuralNinja", "avatar": "🤖", "score": 48200, "gamesPlayed": 342 }
-  ],
-  "myRank": 15,
-  "totalPlayers": 12480
+Response 200:
+{
+  "leaderboard": [
+    { "id": "uuid", "username": "...", "avatar": "🧩", "score": 4800, "games": 12, "level": 3, "rank": 1 },
+    ...
+  ]
 }
 ```
 
-#### GET /leaderboard/daily?date=2025-07-03
+#### `POST /api/leaderboard/update` *(Bearer token required)*
+Upserts a user's leaderboard entry and re-ranks all players.
 
-#### GET /leaderboard/weekly?week=2025-W27
-
-#### GET /leaderboard/monthly?month=2025-07
-
----
-
-### Achievements
-
-#### GET /achievements *(protected)*
 ```json
-Response: {
-  "all": [...AchievementDTO],
-  "unlocked": ["first_victory", "speed_runner"],
-  "locked": ["genius", ...]
+Request:
+{
+  "id":     "uuid",
+  "score":  4800,
+  "games":  12
+}
+
+Response 200:
+{
+  "message": "Leaderboard updated",
+  "rank": 1
 }
 ```
 
 ---
 
-## Spring Boot Package Structure
+## Data Storage
 
-```
-src/main/java/com/sudokoarena/
-├── SudokoArenaApplication.java
-├── config/
-│   ├── SecurityConfig.java         ← Spring Security + JWT filter
-│   ├── JwtConfig.java
-│   └── CorsConfig.java
-├── controller/
-│   ├── AuthController.java
-│   ├── UserController.java
-│   ├── PuzzleController.java
-│   ├── GameController.java
-│   ├── HintController.java
-│   ├── LeaderboardController.java
-│   └── AchievementController.java
-├── service/
-│   ├── AuthService.java
-│   ├── UserService.java
-│   ├── PuzzleGeneratorService.java  ← Port the JS backtracking algo to Java
-│   ├── GameService.java
-│   ├── ScoreService.java
-│   ├── HintService.java
-│   ├── AchievementService.java
-│   └── LeaderboardService.java
-├── repository/
-│   ├── UserRepository.java
-│   ├── PuzzleRepository.java
-│   ├── GameRepository.java
-│   ├── ScoreRepository.java
-│   ├── AchievementRepository.java
-│   └── LeaderboardRepository.java
-├── model/
-│   ├── User.java
-│   ├── Puzzle.java
-│   ├── Game.java
-│   ├── Score.java
-│   ├── Achievement.java
-│   └── UserAchievement.java
-├── dto/
-│   ├── request/
-│   │   ├── RegisterRequest.java
-│   │   ├── LoginRequest.java
-│   │   ├── SaveGameRequest.java
-│   │   └── CompleteGameRequest.java
-│   └── response/
-│       ├── AuthResponse.java
-│       ├── UserDTO.java
-│       ├── GameResultDTO.java
-│       └── LeaderboardDTO.java
-├── security/
-│   ├── JwtUtil.java
-│   ├── JwtAuthFilter.java
-│   └── UserDetailsServiceImpl.java
-└── exception/
-    ├── GlobalExceptionHandler.java
-    ├── ResourceNotFoundException.java
-    └── UnauthorizedException.java
-```
+All data is stored as plain JSON files on your local filesystem — no database engine is needed.
+
+| Location                        | Contents                              |
+|---------------------------------|---------------------------------------|
+| `database/users/<uuid>.json`    | Full user profile including password hash |
+| `database/games/<uuid>.json`    | List of saved game entries per user   |
+| `database/leaderboard.json`     | Global leaderboard array (ranked)     |
+
+> **Password hashes** are never returned by any API endpoint. The `sanitize_user_data()` helper strips `password_hash` from all responses.
 
 ---
 
-## Connecting Frontend to Backend
+## Security
 
-In the frontend, replace the localStorage stubs in the API layer with real fetch calls:
-
-```javascript
-// Before (localStorage stub):
-const user = LS.get('sv_user', null);
-
-// After (real API):
-const response = await fetch('http://localhost:8080/api/v1/users/me', {
-  headers: { 'Authorization': `Bearer ${token}` }
-});
-const user = await response.json();
-```
-
-All API calls are isolated in the app — the service layer in the codebase makes swapping trivial.
+- **Path traversal protection:** All user IDs are validated as UUID v4 format before being used as filenames (prevents `../../etc/passwd` attacks).
+- **Bearer token auth:** Each session generates a new UUID token stored in the user's JSON file. Tokens are rotated on every login.
+- **Password hashing:** bcrypt with a random salt (strength 12) when available. Legacy SHA-256 hashes are automatically migrated to bcrypt on the user's next successful login.
+- **CORS headers:** All responses include `Access-Control-Allow-Origin: *` for local development.
+- **Protected fields:** The `/api/users/update` endpoint never overwrites `id`, `email`, `password_hash`, `token`, or `createdAt`.
 
 ---
 
-## Security Checklist
+## Running Tests
 
-- [x] BCrypt password hashing (strength=12)
-- [x] JWT with expiry + refresh tokens
-- [x] CORS configured for frontend origin only
-- [x] Input validation with `@Valid` + Bean Validation
-- [x] SQL injection prevention via JPA repositories
-- [x] Rate limiting via Spring AOP or Bucket4j
-- [x] HTTPS in production (Render/Railway auto-provision)
-
----
-
-## Deployment
-
-### Frontend (Vercel)
 ```bash
-# No build step needed — just deploy index.html
-# Or use Vite for a proper build if migrating
+# From the project root:
+python -m pytest tests/ -v
 ```
 
-### Backend (Render / Railway)
-```bash
-# Dockerfile
-FROM eclipse-temurin:21-jre
-COPY target/sudokoarena-*.jar app.jar
-ENTRYPOINT ["java", "-jar", "/app.jar"]
-```
+All 15 automated tests cover registration, login, progress save/load, and path traversal security guards.
 
-### Database (Railway PostgreSQL / Supabase)
-```
-# Environment variables:
-DATABASE_URL=postgresql://...
-JWT_SECRET=...
-```
+---
+
+## Offline / No-Server Mode
+
+The server is **completely optional**. The frontend runs fully in the browser using `localStorage` as a fallback. If the server is not running, all user data (accounts, game saves, progress) is persisted in the browser's local storage automatically.
