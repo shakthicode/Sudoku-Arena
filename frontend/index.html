@@ -2835,6 +2835,19 @@
             newAchievements: newAchievements.filter(a => !(user.achievements || []).includes(a)),
           };
           LS.set('sv_last_result', resultData);
+          // Mark daily challenge as completed for today (prevents replaying)
+          if (isDaily && won) {
+            const todayStr = new Date().toDateString();
+            LS.set(`sv_daily_done_${user.id}_${todayStr}`, {
+              date: todayStr,
+              difficulty,
+              score: score.total,
+              dailyBonus: score.dailyBonus || 0,
+              time,
+              mistakes: finalMistakes,
+              hintsUsed,
+            });
+          }
           // Only clear game state on win; keep it for loss so solution can be shown
           if (won) saveGameState(null);
 
@@ -3930,6 +3943,16 @@
       const diffCfg = DIFFICULTY_CONFIG[dailyDifficulty] || DIFFICULTY_CONFIG['Hard'];
       const bonusCfg = DAILY_BONUS[dailyDifficulty] || DAILY_BONUS['Hard'];
 
+      // Check if user already completed today's daily challenge
+      const todayStr = new Date().toDateString();
+      const dailyDoneKey = user ? `sv_daily_done_${user.id}_${todayStr}` : null;
+      const dailyDoneRecord = dailyDoneKey ? LS.get(dailyDoneKey, null) : null;
+      const alreadyDone = !!dailyDoneRecord;
+
+      // Tomorrow midnight countdown
+      const tomorrow = new Date();
+      tomorrow.setHours(24, 0, 0, 0);
+
       return (
         <div className="min-h-screen pt-20 pb-12 px-4" style={{ animation: 'fadeIn 0.5s ease-out' }}>
           <div className="max-w-4xl mx-auto space-y-8">
@@ -3938,11 +3961,11 @@
             <div className="glass rounded-2xl p-8 text-center relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-yellow-900/20 to-orange-900/10" />
               <div className="relative">
-                <div className="text-5xl mb-3">📅</div>
+                <div className="text-5xl mb-3">{alreadyDone ? '🏅' : '📅'}</div>
                 <h1 className="text-4xl font-display font-black text-white mb-2">Daily Challenge</h1>
                 <p className="text-yellow-400 font-medium mb-1">{dateStr}</p>
 
-                {/* Today's difficulty badge — unique per user */}
+                {/* Today's difficulty badge */}
                 {user && (
                   <div className="flex items-center justify-center gap-3 mb-4 mt-3">
                     <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border ${diffCfg.bg} ${diffCfg.border}`}>
@@ -3952,39 +3975,91 @@
                       <span className={`font-display font-bold text-sm ${diffCfg.color}`}>{dailyDifficulty}</span>
                       <span className="text-slate-500 text-xs">· Today's difficulty</span>
                     </div>
-                    <div className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-yellow-900/30 border border-yellow-500/30`}>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-yellow-900/30 border border-yellow-500/30">
                       <span className="text-yellow-400 font-bold text-sm">{bonusCfg.label}</span>
                       <span className="text-yellow-500/80 text-xs">XP bonus</span>
                     </div>
                   </div>
                 )}
 
-                <p className="text-slate-400 text-sm max-w-lg mx-auto mb-6">
-                  Your puzzle is seeded to today's date — different difficulty for each player. Earn a <strong className="text-yellow-300">{bonusCfg.label} XP multiplier</strong> for completing it!
-                </p>
-                <div className="flex items-center justify-center gap-3 mb-6">
-                  {[{ val: h, lbl: 'hours' }, { val: m, lbl: 'minutes' }, { val: s, lbl: 'seconds' }].map((t, i) => (
-                    <React.Fragment key={t.lbl}>
-                      {i > 0 && <span className="text-slate-600 font-bold text-2xl">:</span>}
-                      <div className="glass-light rounded-xl px-4 py-3 text-center min-w-[60px]">
-                        <p className="text-2xl font-display font-bold text-white">{t.val.toString().padStart(2, '0')}</p>
-                        <p className="text-xs text-slate-500">{t.lbl}</p>
-                      </div>
-                    </React.Fragment>
-                  ))}
-                </div>
-                <p className="text-slate-500 text-xs mb-4">New puzzle resets in ↑</p>
-                {user ? (
-                  <button onClick={() => { setIsDaily(true); setPage('game'); }}
-                    className="btn-primary text-lg py-3 px-10 rounded-xl shadow-glow-primary">
-                    🎯 Start Today's Challenge
-                  </button>
-                ) : (
+                {alreadyDone ? (
+                  /* ── ALREADY COMPLETED STATE ─────────────────────────────────── */
                   <div>
-                    <p className="text-slate-400 text-sm mb-3">Sign in to see your assigned difficulty and track your score.</p>
-                    <button onClick={() => setPage('register')} className="btn-primary py-3 px-8">
-                      Create Free Account
-                    </button>
+                    {/* Completion badge */}
+                    <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-green-900/30 border border-green-500/40 mb-5" style={{ animation: 'bounceIn 0.5s ease-out' }}>
+                      <span className="text-green-400 text-lg">✅</span>
+                      <span className="text-green-300 font-bold text-sm">Challenge Completed!</span>
+                    </div>
+
+                    {/* Score recap */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 max-w-lg mx-auto">
+                      {[
+                        { label: 'Score', val: dailyDoneRecord.score?.toLocaleString(), icon: '🏆', color: 'text-yellow-400' },
+                        { label: 'Bonus XP', val: `+${dailyDoneRecord.dailyBonus?.toLocaleString()}`, icon: '📅', color: 'text-yellow-300' },
+                        { label: 'Time', val: `${Math.floor(dailyDoneRecord.time / 60)}:${String(dailyDoneRecord.time % 60).padStart(2, '0')}`, icon: '⏱️', color: 'text-blue-400' },
+                        { label: 'Mistakes', val: `${dailyDoneRecord.mistakes}/3`, icon: '💔', color: dailyDoneRecord.mistakes === 0 ? 'text-green-400' : 'text-red-400' },
+                      ].map(s => (
+                        <div key={s.label} className="glass-light rounded-xl p-3 text-center">
+                          <p className="text-xl mb-1">{s.icon}</p>
+                          <p className={`font-display font-bold text-base ${s.color}`}>{s.val}</p>
+                          <p className="text-xs text-slate-500 mt-0.5">{s.label}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Countdown to tomorrow */}
+                    <p className="text-slate-400 text-sm mb-3">Next challenge unlocks in:</p>
+                    <div className="flex items-center justify-center gap-3 mb-5">
+                      {[{ val: h, lbl: 'hours' }, { val: m, lbl: 'minutes' }, { val: s, lbl: 'seconds' }].map((t, i) => (
+                        <React.Fragment key={t.lbl}>
+                          {i > 0 && <span className="text-slate-600 font-bold text-2xl">:</span>}
+                          <div className="glass-light rounded-xl px-4 py-3 text-center min-w-[60px]">
+                            <p className="text-2xl font-display font-bold text-white">{t.val.toString().padStart(2, '0')}</p>
+                            <p className="text-xs text-slate-500">{t.lbl}</p>
+                          </div>
+                        </React.Fragment>
+                      ))}
+                    </div>
+
+                    <p className="text-slate-300 font-semibold text-base mb-1">🎉 Great work! Stay tuned for tomorrow's challenge.</p>
+                    <p className="text-slate-500 text-sm">A brand-new puzzle with a fresh difficulty awaits you.</p>
+
+                    <div className="flex gap-3 justify-center mt-6">
+                      <button onClick={() => setPage('leaderboard')} className="btn-secondary flex items-center gap-2">🏆 View Leaderboard</button>
+                      <button onClick={() => setPage('difficulty')} className="btn-primary flex items-center gap-2">🎮 Play Campaign</button>
+                    </div>
+                  </div>
+                ) : (
+                  /* ── NORMAL START STATE ──────────────────────────────────────── */
+                  <div>
+                    <p className="text-slate-400 text-sm max-w-lg mx-auto mb-6">
+                      Your puzzle is seeded to today's date — different difficulty for each player. Earn a <strong className="text-yellow-300">{bonusCfg.label} XP multiplier</strong> for completing it!
+                    </p>
+                    <div className="flex items-center justify-center gap-3 mb-6">
+                      {[{ val: h, lbl: 'hours' }, { val: m, lbl: 'minutes' }, { val: s, lbl: 'seconds' }].map((t, i) => (
+                        <React.Fragment key={t.lbl}>
+                          {i > 0 && <span className="text-slate-600 font-bold text-2xl">:</span>}
+                          <div className="glass-light rounded-xl px-4 py-3 text-center min-w-[60px]">
+                            <p className="text-2xl font-display font-bold text-white">{t.val.toString().padStart(2, '0')}</p>
+                            <p className="text-xs text-slate-500">{t.lbl}</p>
+                          </div>
+                        </React.Fragment>
+                      ))}
+                    </div>
+                    <p className="text-slate-500 text-xs mb-5">New puzzle resets in ↑</p>
+                    {user ? (
+                      <button onClick={() => { setIsDaily(true); setPage('game'); }}
+                        className="btn-primary text-lg py-3 px-10 rounded-xl shadow-glow-primary">
+                        🎯 Start Today's Challenge
+                      </button>
+                    ) : (
+                      <div>
+                        <p className="text-slate-400 text-sm mb-3">Sign in to see your assigned difficulty and track your score.</p>
+                        <button onClick={() => setPage('register')} className="btn-primary py-3 px-8">
+                          Create Free Account
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
